@@ -7,11 +7,47 @@
 
 import SwiftUI
 
+final class AppDelegate: NSObject, NSApplicationDelegate {
+        
+    var hotkeyLoop: HotkeyService!
+    
+    internal func applicationDidFinishLaunching(_ notification: Notification) {
+        prepareWindow()
+        hotkeyLoop = HotkeyService()
+    }
+    
+    private func prepareWindow() {
+        if let window = NSApp.windows.first {
+            removeStoplights(from: window)
+            makeBackgroundClear(from: window)
+        }
+    }
+
+    private func removeStoplights(from window: NSWindow) {
+        // Hide stoplights
+        window.standardWindowButton(.closeButton)?.isHidden = true
+        window.standardWindowButton(.miniaturizeButton)?.isHidden = true
+        window.standardWindowButton(.zoomButton)?.isHidden = true
+    }
+
+    private func makeBackgroundClear(from window: NSWindow) {
+        // Make background clear
+        window.backgroundColor = .clear
+    }
+}
+
+
 @main
 struct MiniApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .offset(x: 0, y:-15.0)
+                .padding(.horizontal, 8.0)
         }
+        .windowStyle(.hiddenTitleBar)
+        .windowResizability(.contentSize)
     }
 }
