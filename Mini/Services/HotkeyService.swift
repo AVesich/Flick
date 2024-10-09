@@ -44,9 +44,16 @@ class HotkeyService {
 func checkButtonDownEventForOptS(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? {
     let mPressed = event.getIntegerValueField(.keyboardEventKeycode) == Keys.keyCode(for: "m")
     let optionPressed = event.flags.contains(.maskAlternate)
-    if type == .keyDown, mPressed, optionPressed {
+    let controlPressed = event.flags.contains(.maskControl)
+    print(NSApp.isActive)
+    if mPressed && optionPressed {
         NSApp.activate(ignoringOtherApps: true)
         return nil
+    } else if mPressed && controlPressed && !NSApp.isActive { // We will only minify apps that aren't us
+        WindowManager.shared.minifyCurrentApp()
+        return nil
     }
+
     return Unmanaged.passUnretained(event)
 }
+

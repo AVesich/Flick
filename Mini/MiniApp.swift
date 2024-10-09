@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
         
@@ -44,10 +45,19 @@ struct MiniApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .offset(x: 0, y:-15.0)
-                .padding(.horizontal, 8.0)
+                .ignoresSafeArea()
+                .background(.black)
         }
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
+        MenuBarExtra("Mini", systemImage: "hand.pinch.fill") {
+            Button("Close Mini") {
+                NSApp.terminate(self)
+            }
+            Divider()
+            Button("Mini Settings...") {
+                NSApp.terminate(self)
+            }
+        }
     }
 }
