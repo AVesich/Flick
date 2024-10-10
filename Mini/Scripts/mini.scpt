@@ -6,20 +6,40 @@ on get_res()
     return screen_resolution
 end get_res
 
+on activate(appName)
+    -- Get the number of windows
+    tell application "System Events"
+        tell process appName
+            set windowCount to count windows
+        end tell
+    end tell
+
+    -- Open a window if there aren't any currently, and activate the app
+    tell application appName
+        if windowCount = 0 then
+            reopen
+        end if
+        activate
+    end tell
+end activate
+
 on minify(appName)
-    log appName
-    set targetApp to appName
+--on run {appName}
     set screenRes to get_res()
-    tell application targetApp to activate
+
+    activate(appName)
+    
+    -- Minify the app
     tell application "System Events"
         tell process appName
             tell window 1
                 set level to 3
                 set size to {800, 500}
-                set position to {24, item 4 of screenRes - 500 - 24}
-
-            --set hides when deactivated to false
+                set position to {24, (item 4 of screenRes) - 500 - 24}
             end tell
         end tell
     end tell
+    --set appWindow to current application's window 1
+    --set appWindow's hidesOnDeactivate to true
+--end run
 end minify

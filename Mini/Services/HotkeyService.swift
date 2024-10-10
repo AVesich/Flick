@@ -45,7 +45,6 @@ func checkButtonDownEventForOptS(proxy: CGEventTapProxy, type: CGEventType, even
     let mPressed = event.getIntegerValueField(.keyboardEventKeycode) == Keys.keyCode(for: "m")
     let optionPressed = event.flags.contains(.maskAlternate)
     let controlPressed = event.flags.contains(.maskControl)
-    print(NSApp.isActive)
     if mPressed && optionPressed {
         NSApp.activate(ignoringOtherApps: true)
         return nil
