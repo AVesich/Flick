@@ -12,11 +12,11 @@ struct ContentView: View {
     var body: some View {
         VStack {
             HStack {
-                Text("Mini")
-                    .padding(.horizontal, 24.0)
-                    .font(.system(size: 18.0).monospaced().bold())
+                Text(" mini")
+                    .font(.olympe(size: 24.0))
                 Spacer()
             }
+            .padding(.horizontal, 24.0)
             Divider()
                 .padding(.horizontal, 24.0)
             AppList(apps: WindowManager.shared.openApps)

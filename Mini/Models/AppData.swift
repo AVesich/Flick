@@ -11,5 +11,6 @@ struct AppData: Identifiable {
     let id = UUID()
     let icon: NSImage
     let name: String
+    let windowCount: Int
     var mini: Bool
 }

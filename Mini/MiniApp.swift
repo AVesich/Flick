@@ -8,6 +8,11 @@
 import SwiftUI
 import AppKit
 
+final class BorderlessWindow: NSWindow {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { true }
+}
+
 final class AppDelegate: NSObject, NSApplicationDelegate {
         
     var hotkeyLoop: HotkeyService!
@@ -19,36 +24,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     
     private func prepareWindow() {
         if let window = NSApp.windows.first {
-            removeStoplights(from: window)
             makeBackgroundClear(from: window)
+            makeBorderless(from: window)
         }
-    }
-
-    private func removeStoplights(from window: NSWindow) {
-        // Hide stoplights
-        window.standardWindowButton(.closeButton)?.isHidden = true
-        window.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        window.standardWindowButton(.zoomButton)?.isHidden = true
     }
 
     private func makeBackgroundClear(from window: NSWindow) {
         // Make background clear
         window.backgroundColor = .clear
     }
+    
+    private func makeBorderless(from window: NSWindow) {
+        // Make background clear
+        window.styleMask = [.borderless]
+        window.hidesOnDeactivate = true
+    }
 }
-
 
 @main
 struct MiniApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .ignoresSafeArea()
-                .background(.black)
+                .background(.thinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 16.0))
         }
-        .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
         MenuBarExtra("Mini", systemImage: "hand.pinch.fill") {
             Button("Close Mini") {

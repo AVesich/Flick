@@ -23,8 +23,8 @@ on activate(appName)
     end tell
 end activate
 
-on minify(appName)
---on run {appName}
+on minify(appName, windowNum)
+--on run {appName, windowNum}
     set screenRes to get_res()
 
     activate(appName)
@@ -32,14 +32,12 @@ on minify(appName)
     -- Minify the app
     tell application "System Events"
         tell process appName
-            tell window 1
-                set level to 3
+            tell window windowNum
+                set level to 4
                 set size to {800, 500}
                 set position to {24, (item 4 of screenRes) - 500 - 24}
             end tell
         end tell
     end tell
-    --set appWindow to current application's window 1
-    --set appWindow's hidesOnDeactivate to true
---end run
 end minify
+--end run

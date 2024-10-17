@@ -15,7 +15,7 @@ enum ScriptErrors: Error {
     }
 }
 
-func callAppleScript(_ scriptURL: URL, withMainFuncName funcName: String, andArgs args: [String] = []) throws {
+func callAppleScript(_ scriptURL: URL, withMainFuncName funcName: String, andArgs args: [NSAppleEventDescriptor] = []) throws {
     var errors: NSDictionary?
     let script = NSAppleScript(contentsOf: scriptURL, error: nil)
     let handler = NSAppleEventDescriptor(string: funcName)
@@ -23,8 +23,7 @@ func callAppleScript(_ scriptURL: URL, withMainFuncName funcName: String, andArg
 
     var offset = 0
     for arg in args {
-        let argDescriptor = NSAppleEventDescriptor.init(string: arg)
-        argumentList.insert(argDescriptor, at: 1+offset)
+        argumentList.insert(arg, at: 1+offset)
         offset += 1
     }
 

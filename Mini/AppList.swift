@@ -9,19 +9,37 @@ import SwiftUI
 
 struct AppList: View {
     @State private var selectedRow: Int? = nil
+    @State private var searchQuery = ""
     public var apps: [AppData]
     
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
+            TextField(text: $searchQuery, prompt: Text("Find an app...")) {}
+                .textFieldStyle(.plain)
+                .padding(.horizontal, 16.0)
+                .padding(.vertical, 10.0)
+                .background {
+                    RoundedRectangle(cornerRadius: 8.0)
+                        .fill(.white.opacity(0.1))
+                }
+            .font(.system(size: 14.0).weight(.semibold))
             LazyVStack(spacing: 4.0) {
                 ForEach(Array(apps.enumerated()), id: \.offset) { (offset, app) in
                     AppCell(app: app, index: offset)
                 }
             }
+            .padding(.bottom, 16.0)
         }
     }
 }
 
-//#Preview {
-//    SelectableList(elements: [IdentifiableString(text: "Austin"), IdentifiableString(text: "Thomas"), IdentifiableString(text: "John")])
-//}
+#Preview {
+    AppList(apps: [AppData(icon: .init(systemSymbolName: "app.fill", accessibilityDescription: nil)!,
+                           name: "App",
+                           windowCount: 1,
+                           mini: false),
+                   AppData(icon: .init(systemSymbolName: "app.fill", accessibilityDescription: nil)!,
+                           name: "App 2",
+                           windowCount: 1,
+                           mini: true)])
+}
