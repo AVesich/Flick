@@ -33,7 +33,7 @@ on minify(appName, windowNum)
     tell application "System Events"
         tell process appName
             tell window windowNum
-                set level to 4
+                set level to 3
                 set size to {800, 500}
                 set position to {24, (item 4 of screenRes) - 500 - 24}
             end tell

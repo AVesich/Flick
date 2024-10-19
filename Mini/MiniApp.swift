@@ -15,11 +15,11 @@ final class BorderlessWindow: NSWindow {
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
         
-    var hotkeyLoop: HotkeyService!
+    var hotkeyService: HotkeyService!
     
     internal func applicationDidFinishLaunching(_ notification: Notification) {
         prepareWindow()
-        hotkeyLoop = HotkeyService()
+        hotkeyService = HotkeyService()
     }
     
     private func prepareWindow() {

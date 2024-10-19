@@ -6,8 +6,11 @@
 //
 
 import SwiftUI
+import ScreenCaptureKit
 
 struct ContentView: View {
+    
+    @StateObject private var windowManager = WindowManager()
         
     var body: some View {
         VStack {
@@ -19,11 +22,16 @@ struct ContentView: View {
             .padding(.horizontal, 24.0)
             Divider()
                 .padding(.horizontal, 24.0)
-            AppList(apps: WindowManager.shared.openApps)
+            AppList(windowManager: windowManager)
                 .padding(.horizontal, 16.0)
         }
         .padding(.top, 24.0)
         .frame(width: 340.0, height: 340.0)
+        .onAppear {
+            Task {
+                await windowManager.beginUpdating()
+            }
+        }
     }
 }
 

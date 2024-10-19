@@ -17,7 +17,7 @@ struct AppCell: View {
         VStack(alignment: .leading) {
             if index < 5 {
                 Button {
-                    WindowManager.shared.minifyApp(withName: app.name)
+//                    WindowManager.shared.minifyApp(withName: app.name)
                 } label: {
                     AppCellContent(app: app, index: index)
                 }
@@ -25,7 +25,7 @@ struct AppCell: View {
                 .keyboardShortcut(.init("\(index+1)"), modifiers: []) // No modifiers, just press the button
             } else {
                 Button {
-                    WindowManager.shared.minifyApp(withName: app.name)
+//                    WindowManager.shared.minifyApp(withName: app.name)
                 } label: {
                     AppCellContent(app: app, index: index)
                 }

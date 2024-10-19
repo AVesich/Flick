@@ -52,7 +52,7 @@ func checkButtonDownEventForOptM(proxy: CGEventTapProxy, type: CGEventType, even
         }
         return nil
     } else if mPressed && controlPressed && !NSApp.isActive { // We will only minify apps that aren't us
-        WindowManager.shared.minifyCurrentApp()
+//        WindowManager.shared.minifyCurrentApp()
         return nil
     }
 

@@ -8,9 +8,10 @@
 import SwiftUI
 
 struct AppList: View {
+    
+    @ObservedObject var windowManager: WindowManager
     @State private var selectedRow: Int? = nil
     @State private var searchQuery = ""
-    public var apps: [AppData]
     
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
@@ -24,22 +25,12 @@ struct AppList: View {
                 }
             .font(.system(size: 14.0).weight(.semibold))
             LazyVStack(spacing: 4.0) {
-                ForEach(Array(apps.enumerated()), id: \.offset) { (offset, app) in
-                    AppCell(app: app, index: offset)
+                ForEach(Array(windowManager.availableWindows.enumerated()), id: \.offset) { (offset, window) in
+                    Text("\(window.owningApplication?.applicationName) \(window.windowID)")
+//                    AppCell(app: app, index: offset)
                 }
             }
             .padding(.bottom, 16.0)
         }
     }
-}
-
-#Preview {
-    AppList(apps: [AppData(icon: .init(systemSymbolName: "app.fill", accessibilityDescription: nil)!,
-                           name: "App",
-                           windowCount: 1,
-                           mini: false),
-                   AppData(icon: .init(systemSymbolName: "app.fill", accessibilityDescription: nil)!,
-                           name: "App 2",
-                           windowCount: 1,
-                           mini: true)])
 }
