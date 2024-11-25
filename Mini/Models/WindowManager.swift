@@ -17,7 +17,7 @@ class WindowManager: ObservableObject {
     private var minifiedApps = Set<String>()
     
     @Published var errorMinifying: Bool = false
-    @Published private(set) var availableWindows = [SCWindow]()
+    @Published private(set) var availableWindows = [(SCWindow, NSImage)]()
     
     func beginUpdating() async {
         await updateWindowList()
@@ -33,23 +33,33 @@ class WindowManager: ObservableObject {
         do {
             let content = try await SCShareableContent.excludingDesktopWindows(false,
                                                                                onScreenWindowsOnly: true)
-            availableWindows = filterWindows(content.windows)
+            
+            let filteredWindows = filteredWindows(content.windows)
+            let appIcons = appIcons()
+            
+            var windowImagePairs = [(SCWindow, NSImage)]()
+            for window in filteredWindows {
+                windowImagePairs.append((window, appIcons[window.owningApplication!.applicationName] ?? NSImage(systemSymbolName: "questionmark", accessibilityDescription: nil)!)) // At this point, we've filtered and know the window is from a docked app. We should be able to use '!'.
+            }
+            
+            availableWindows = windowImagePairs
         } catch {
             print("Failed to get the shareable content: \(error.localizedDescription)")
         }
     }
     
     // We only want to give the user access to dock-launched windows
-    private func validWindows() -> Set<CGWindowID> {
-        let windowOptions = CGWindowListOption(arrayLiteral: .excludeDesktopElements, .optionOnScreenOnly)
-        let windowListInfo = CGWindowListCopyWindowInfo(windowOptions, CGWindowID(0))
-        let windows = windowListInfo as! [[CFString: AnyObject]]
-        let filtered = windows.filter { ($0[kCGWindowLayer] as! Int) == 0 }
-        let windowIDs = Set<CGWindowID>(filtered.map { $0[kCGWindowNumber] as! CGWindowID })
-        return windowIDs
+    private func appIcons() -> [String: NSImage] {
+        var results = [String: NSImage]()
+        
+        for app in NSWorkspace.shared.runningApplications {
+            results[app.localizedName!] = app.icon
+        }
+        
+        return results
     }
-    
-    private func filterWindows(_ windows: [SCWindow]) -> [SCWindow] {
+        
+    private func filteredWindows(_ windows: [SCWindow]) -> [SCWindow] {
         let validWindows = validWindows()
         
         return windows
@@ -61,6 +71,15 @@ class WindowManager: ObservableObject {
             .filter { $0.owningApplication?.bundleIdentifier != Bundle.main.bundleIdentifier }
         // Remove windows that aren't in the list of windows we should show (We only show windows belonging to apps in the dock)
             .filter { validWindows.contains($0.windowID) }
+    }
+    
+    private func validWindows() -> Set<CGWindowID> {
+        let windowOptions = CGWindowListOption(arrayLiteral: .excludeDesktopElements, .optionOnScreenOnly)
+        let windowListInfo = CGWindowListCopyWindowInfo(windowOptions, CGWindowID(0))
+        let windows = windowListInfo as! [[CFString: AnyObject]]
+        let filtered = windows.filter { ($0[kCGWindowLayer] as! Int) == 0 }
+        let windowIDs = Set<CGWindowID>(filtered.map { $0[kCGWindowNumber] as! CGWindowID })
+        return windowIDs
     }
     
     func minifyCurrentApp() {

@@ -8,24 +8,18 @@
 import SwiftUI
 import AppKit
 
-final class BorderlessWindow: NSWindow {
-    override var canBecomeKey: Bool { true }
-    override var canBecomeMain: Bool { true }
-}
-
 final class AppDelegate: NSObject, NSApplicationDelegate {
-        
-    var hotkeyService: HotkeyService!
-    
+            
     internal func applicationDidFinishLaunching(_ notification: Notification) {
         prepareWindow()
-        hotkeyService = HotkeyService()
     }
     
     private func prepareWindow() {
         if let window = NSApp.windows.first {
             makeBackgroundClear(from: window)
             makeBorderless(from: window)
+            window.center()
+            window.setFrame(window.frame.offsetBy(dx: 0, dy: -window.frame.size.height/2+64), display: true)
         }
     }
 
@@ -44,15 +38,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 @main
 struct MiniApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    var dragService = ScrollService() // Observed
+    var hotkeyService = HotkeyService()
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .ignoresSafeArea()
-                .background(.thinMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 16.0))
+//            ContentView()
+//                .ignoresSafeArea()
+//                .background(.thinMaterial)
+//                .clipShape(RoundedRectangle(cornerRadius: 16.0))
+            if dragService.scrollState.isTrackingScrolling {
+                WindowSwitchView()
+                    .ignoresSafeArea()
+                    .background(.thickMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 16.0))
+            }
         }
-        .windowResizability(.contentSize)
+        .windowResizability(.contentMinSize)
         MenuBarExtra("Mini", systemImage: "hand.pinch.fill") {
             Button("Close Mini") {
                 NSApp.terminate(self)

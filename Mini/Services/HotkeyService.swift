@@ -7,42 +7,45 @@
 
 import CoreGraphics
 import AppKit
+import CoreHaptics
 
-class HotkeyService {
-    
-    init() {
-        setupHotkey()
-    }
-    
-    private func setupHotkey() {
-        if let event = registerSearchHotkeyEvent() {
+class HotkeyService: ObservableObject {
+    public func start() {
+        if let keyDownEvent = registerKeyDownEvent() {
             print("setting up hotkey event")
-            startRunLoopForHotkeyEvent(event)
+            startRunLoopForEvent(keyDownEvent)
         } else {
             // TODO: - Show oops dialog
             fatalError("Error setting up hotkey event")
         }
     }
-    
-    private func registerSearchHotkeyEvent() -> CFMachPort? {
+        
+    private func registerKeyDownEvent() -> CFMachPort? {
         print("registering hotkey event")
         let buttonDownBitMask = 1 << CGEventType.keyDown.rawValue
         let buttonDownMask = CGEventMask(buttonDownBitMask)
-        return CGEvent.tapCreate(tap: .cgSessionEventTap, place: .tailAppendEventTap, options: .defaultTap, eventsOfInterest: buttonDownMask, callback: checkButtonDownEventForOptM, userInfo: nil)
+        return CGEvent.tapCreate(tap: .cgSessionEventTap,
+                                 place: .tailAppendEventTap,
+                                 options: .defaultTap,
+                                 eventsOfInterest: buttonDownMask,
+                                 callback: handleButtonDownEvents,
+                                 userInfo: nil)
     }
-        
+                
     // For context, CFRunLoop is in charge of control & input dispatch for a task
-    private func startRunLoopForHotkeyEvent(_ event: CFMachPort) {
+    private func startRunLoopForEvent(_ event: CFMachPort) {
         print("starting hotkey event loop")
         let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, event, 0)
         CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
         CGEvent.tapEnable(tap: event, enable: true)
         CFRunLoopRun()
     }
+    
 }
 
-func checkButtonDownEventForOptM(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? {
+func handleButtonDownEvents(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? {
     let mPressed = event.getIntegerValueField(.keyboardEventKeycode) == Keys.keyCode(for: "m")
+    
     let optionPressed = event.flags.contains(.maskAlternate)
     let controlPressed = event.flags.contains(.maskControl)
     if mPressed && optionPressed {
@@ -55,7 +58,6 @@ func checkButtonDownEventForOptM(proxy: CGEventTapProxy, type: CGEventType, even
 //        WindowManager.shared.minifyCurrentApp()
         return nil
     }
-
+    
     return Unmanaged.passUnretained(event)
 }
-

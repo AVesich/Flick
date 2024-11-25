@@ -25,10 +25,10 @@ struct AppList: View {
                 }
             .font(.system(size: 14.0).weight(.semibold))
             LazyVStack(spacing: 4.0) {
-                ForEach(Array(windowManager.availableWindows.enumerated()), id: \.offset) { (offset, window) in
-                    Text("\(window.owningApplication?.applicationName) \(window.windowID)")
-//                    AppCell(app: app, index: offset)
-                }
+//                ForEach(Array(windowManager.availableWindows.enumerated()), id: \.offset) { (offset, (window, icon)) in
+//                    Text("\(window.owningApplication?.applicationName) \(window.windowID)")
+////                    AppCell(app: app, index: offset)
+//                }
             }
             .padding(.bottom, 16.0)
         }
