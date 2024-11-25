@@ -12,8 +12,9 @@ import Observation
 @Observable class ScrollService {
     // MARK: - Tracking Scrolling state
     public var scrollState = ScrollTrackerState()
-    public var windows = [String]()
-    private var orderedWindows = OrderedWindows()
+    public var windows: [(NSImage, String)] {
+        return scrollState.orderedWindows.appIconsWithWindowDescriptions
+    }
     private var started: Bool = false
     
     // MARK: - Initialization
@@ -137,7 +138,7 @@ func passthroughScroll(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent
 
         // Modify the property (e.g., increase the counter)
         if tracker.isTrackingScrolling {
-            tracker.scrollDelta += Int(scroll)
+            tracker.scrollDelta = min(max(0, tracker.scrollDelta+Int(scroll)), tracker.maxDelta)
         }
         
         return nil // Don't pass the scroll on

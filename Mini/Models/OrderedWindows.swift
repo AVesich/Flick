@@ -17,8 +17,8 @@ import Observation
         Task {
             let windowsToApps = await availableWindowsForApps() // window id:app name
             let appsToIcons = availableAppIcons() // app name:app icon
-            let windowsToDescriptions = availableWindowIDsWithDescriptions() // window id:window name
-            let windowIDs = Set<CGWindowID>(windowsToApps.keys).intersection(Set<CGWindowID>(windowsToDescriptions.keys))
+            let (orderedWindows, windowsToDescriptions) = availableWindowIDsWithDescriptions() // ordered window ids (f-to-b), window id:window name
+            let windowIDs = orderedWindows.filter { windowsToApps.keys.contains($0) }
             
             appIconsWithWindowDescriptions = windowIDs.map {
                 ((appsToIcons[windowsToApps[$0]!] ?? NSImage(systemSymbolName: "questionmark", accessibilityDescription: nil))!, windowsToDescriptions[$0]!)
@@ -52,16 +52,19 @@ import Observation
     }
 
 
-    private func availableWindowIDsWithDescriptions() -> [CGWindowID: String] { // window id:window name
+    private func availableWindowIDsWithDescriptions() -> ([CGWindowID], [CGWindowID: String]) { // ordered window ids (f-to-b), window id:window name
         let windowOptions = CGWindowListOption(arrayLiteral: .excludeDesktopElements, .optionOnScreenOnly)
         let windowListInfo = CGWindowListCopyWindowInfo(windowOptions, CGWindowID(0))
         let windows = windowListInfo as! [[CFString: AnyObject]]
         let filtered = windows.filter { ($0[kCGWindowLayer] as! Int) == 0 }
         
-        return Dictionary(uniqueKeysWithValues:
-            filtered.map {
-                ($0[kCGWindowNumber] as! CGWindowID, $0[kCGWindowName] as! String)
-            }
+        return (
+            filtered.map { $0[kCGWindowNumber] as! CGWindowID } ,
+            Dictionary(uniqueKeysWithValues:
+                filtered.map {
+                    ($0[kCGWindowNumber] as! CGWindowID, $0[kCGWindowName] as! String)
+                }
+            )
         )
     }
 }

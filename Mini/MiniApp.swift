@@ -38,7 +38,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 @main
 struct MiniApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    var dragService = ScrollService() // Observed
+    var scrollService = ScrollService() // Observed
     var hotkeyService = HotkeyService()
     
     var body: some Scene {
@@ -47,8 +47,9 @@ struct MiniApp: App {
 //                .ignoresSafeArea()
 //                .background(.thinMaterial)
 //                .clipShape(RoundedRectangle(cornerRadius: 16.0))
-            if dragService.scrollState.isTrackingScrolling {
-                WindowSwitchView()
+            if scrollService.scrollState.isTrackingScrolling {
+                WindowSwitchView(windowData: scrollService.windows,
+                                 selectedIndex: scrollService.scrollState.scrolledIdx)
                     .ignoresSafeArea()
                     .background(.thickMaterial)
                     .clipShape(RoundedRectangle(cornerRadius: 16.0))
@@ -59,10 +60,10 @@ struct MiniApp: App {
             Button("Close Mini") {
                 NSApp.terminate(self)
             }
-            Divider()
-            Button("Mini Settings...") {
-                NSApp.terminate(self)
-            }
+//            Divider()
+//            Button("Mini Settings...") {
+//                NSApp.terminate(self)
+//            }
         }
     }
 }
