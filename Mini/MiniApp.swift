@@ -39,7 +39,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 struct MiniApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     var scrollService = ScrollService() // Observed
-    var hotkeyService = HotkeyService()
+//    var hotkeyService = HotkeyService()
     
     var body: some Scene {
         WindowGroup {
@@ -49,7 +49,8 @@ struct MiniApp: App {
 //                .clipShape(RoundedRectangle(cornerRadius: 16.0))
             if scrollService.scrollState.isTrackingScrolling {
                 WindowSwitchView(windowData: scrollService.windows,
-                                 selectedIndex: scrollService.scrollState.scrolledIdx)
+                                 selectedIndex: scrollService.scrollState.scrolledIdx,
+                                 horizontalDrag: scrollService.scrollState.horiScrollDelta)
                     .ignoresSafeArea()
                     .background(.thickMaterial)
                     .clipShape(RoundedRectangle(cornerRadius: 16.0))

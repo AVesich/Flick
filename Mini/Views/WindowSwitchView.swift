@@ -9,50 +9,40 @@ import SwiftUI
 
 struct WindowSwitchView: View {
     
-    public var windowData: [(NSImage, String)]
+    public var windowData: [(NSImage, String, Int, pid_t)]
     public var selectedIndex: Int
+    public var horizontalDrag: CGFloat
 
     var body: some View {
-        VStack(spacing: 16.0) {
-            ScrollViewReader { scrollView in
-                ScrollView(.vertical, showsIndicators: false) {
+        ScrollViewReader { scrollView in
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: -4.0) {
                     ForEach(Array(windowData.enumerated()), id:\.0) { (index, appAndDesc) in
-                        HStack(spacing: 16.0) {
-                            Image(nsImage: appAndDesc.0)
-                                .resizable()
-                                .frame(width: 30.0, height: 30.0)
-                                .scaledToFit()
-                                .scaleEffect((selectedIndex==index) ? 1.2 : 1.0)
-                            Text(appAndDesc.1)
-                                .lineLimit(2)
-                                .scaleEffect((selectedIndex==index) ? 1.05 : 1.0)
-                            Spacer()
+                        EditableCell(leftEdit: (-horizontalDrag)/10.0, // drag is negative by default and delta of 10 is max drag
+                                     selected: selectedIndex == index) {
+                            WindowCell(index: index,
+                                       appAndDesc: appAndDesc,
+                                       selectedIndex: selectedIndex,
+                                       maxIndex: windowData.count-1)
                         }
-                        .background {
-                            if selectedIndex==index {
-                                RoundedRectangle(cornerRadius: 10.0)
-                                    .fill(.secondary.opacity(0.2))
-                                    .frame(width: 236.0, height: 42.0)
-                            }
-                        }
-                        .padding(.bottom, index==windowData.count-1 ? 16.0 : 0.0)
-                        .id(index)
+                         .padding(.bottom, (index == windowData.count-1) ? 10.0 : 0.0)
                     }
-                    .padding(16.0)
                 }
-                .onChange(of: selectedIndex) {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        scrollView.scrollTo(selectedIndex, anchor: .bottom)
-                    }
+                .padding(10.0)
+            }
+            .onChange(of: selectedIndex) {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    NSHapticFeedbackManager.defaultPerformer.perform(.generic, performanceTime: .now)
+                    scrollView.scrollTo(min(selectedIndex+1, windowData.count), anchor: .bottom)
                 }
             }
-        }
+        } // ScrollViewReader
         .frame(maxWidth: 256.0, maxHeight: 256.0)
-        .animation(.bouncy(duration: 0.15, extraBounce: 0.25), value: selectedIndex)
     }
 }
 
 #Preview {
-    WindowSwitchView(windowData: OrderedWindows().appIconsWithWindowDescriptions,
-                     selectedIndex: 0)
+    WindowSwitchView(windowData: OrderedWindows().appIconsWithWindowDescriptionsAndPIDs,
+                     selectedIndex: 0,
+                     horizontalDrag: 0.0)
 }

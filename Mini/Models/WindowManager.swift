@@ -102,19 +102,4 @@ class WindowManager: ObservableObject {
             errorMinifying = false
         }
     }
-    
-    @objc func makeAppsFrontmost() {
-        for app in minifiedApps {
-            do {
-                let bringToFrontScriptURL = Bundle.main.url(forResource: "front", withExtension: "scpt")!
-                
-                try callAppleScript(bringToFrontScriptURL,
-                                    withMainFuncName: "frontmost",
-                                    andArgs: [NSAppleEventDescriptor(string: app),
-                                              NSAppleEventDescriptor(int32: 1)]) // Minify the first/main window of an app by default
-            } catch {
-                errorMinifying = false
-            }
-        }
-    }
 }

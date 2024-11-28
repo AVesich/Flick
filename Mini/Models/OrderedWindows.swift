@@ -11,18 +11,25 @@ import ScreenCaptureKit
 import Observation
 
 @Observable class OrderedWindows {
-    public var appIconsWithWindowDescriptions = [(NSImage, String)]()
+    public var appIconsWithWindowDescriptionsAndPIDs = [(NSImage, String, Int, pid_t)]()
     
     init() {
         Task {
-            let windowsToApps = await availableWindowsForApps() // window id:app name
-            let appsToIcons = availableAppIcons() // app name:app icon
-            let (orderedWindows, windowsToDescriptions) = availableWindowIDsWithDescriptions() // ordered window ids (f-to-b), window id:window name
-            let windowIDs = orderedWindows.filter { windowsToApps.keys.contains($0) }
+            await updateAppList()
+        }
+    }
+    
+    public func updateAppList() async {
+        let windowsToApps = await availableWindowsForApps() // window id:app name
+        let appsToIcons = availableAppIcons() // app name:app icon
+        let (orderedWindows, windowsToDescriptionsAndPIDs) = availableWindowIDsWithDescriptions() // ordered window ids (f-to-b), window id:(window name, window index, app pid)
+        let windowIDs = orderedWindows.filter { windowsToApps.keys.contains($0) }
             
-            appIconsWithWindowDescriptions = windowIDs.map {
-                ((appsToIcons[windowsToApps[$0]!] ?? NSImage(systemSymbolName: "questionmark", accessibilityDescription: nil))!, windowsToDescriptions[$0]!)
-            }
+        appIconsWithWindowDescriptionsAndPIDs = windowIDs.map {
+            ((appsToIcons[windowsToApps[$0]!] ?? NSImage(systemSymbolName: "questionmark",accessibilityDescription: nil))!,
+             windowsToDescriptionsAndPIDs[$0]!.0,
+             windowsToDescriptionsAndPIDs[$0]!.1,
+             windowsToDescriptionsAndPIDs[$0]!.2)
         }
     }
         
@@ -52,17 +59,20 @@ import Observation
     }
 
 
-    private func availableWindowIDsWithDescriptions() -> ([CGWindowID], [CGWindowID: String]) { // ordered window ids (f-to-b), window id:window name
+    private func availableWindowIDsWithDescriptions() -> ([CGWindowID], [CGWindowID: (String, Int, pid_t)]) { // ordered window ids (f-to-b), window id:(window name, window index, app pid)
         let windowOptions = CGWindowListOption(arrayLiteral: .excludeDesktopElements, .optionOnScreenOnly)
         let windowListInfo = CGWindowListCopyWindowInfo(windowOptions, CGWindowID(0))
         let windows = windowListInfo as! [[CFString: AnyObject]]
         let filtered = windows.filter { ($0[kCGWindowLayer] as! Int) == 0 }
         
+        var pids = [pid_t:Int]()
         return (
             filtered.map { $0[kCGWindowNumber] as! CGWindowID } ,
             Dictionary(uniqueKeysWithValues:
                 filtered.map {
-                    ($0[kCGWindowNumber] as! CGWindowID, $0[kCGWindowName] as! String)
+                    let windowIndex = pids[$0[kCGWindowOwnerPID] as! pid_t] ?? 0
+                    pids[$0[kCGWindowOwnerPID] as! pid_t] = windowIndex + 1
+                    return ($0[kCGWindowNumber] as! CGWindowID, ($0[kCGWindowName] as! String, windowIndex, $0[kCGWindowOwnerPID] as! pid_t))
                 }
             )
         )

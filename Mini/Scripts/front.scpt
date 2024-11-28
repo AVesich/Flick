@@ -1,5 +1,0 @@
---on frontmost(appName, windowNum)
-    --tell application "Arc"
-      --  set visible of window 1 to true
-    --end tell
---end frontmost

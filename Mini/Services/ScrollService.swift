@@ -7,13 +7,14 @@
 
 import CoreGraphics
 import AppKit
+import ApplicationServices
 import Observation
 
 @Observable class ScrollService {
     // MARK: - Tracking Scrolling state
     public var scrollState = ScrollTrackerState()
-    public var windows: [(NSImage, String)] {
-        return scrollState.orderedWindows.appIconsWithWindowDescriptions
+    public var windows: [(NSImage, String, Int, pid_t)] {
+        return scrollState.orderedWindows.appIconsWithWindowDescriptionsAndPIDs
     }
     private var started: Bool = false
     
@@ -75,10 +76,10 @@ import Observation
                                  place: .tailAppendEventTap,
                                  options: .defaultTap,
                                  eventsOfInterest: scrollMask,
-                                 callback: passthroughScroll,
+                                 callback: scrollHandler,
                                  userInfo: ptr)
     }
-
+    
     // MARK: - Event running
     // For context, CFRunLoop is in charge of control & input dispatch for a task
     private func startRunLoopForEvent(_ event: CFMachPort) {
@@ -101,9 +102,9 @@ func fnzDown(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, refcon: 
         if !tracker.isTrackingScrolling {
             tracker.isTrackingScrolling = true
             DispatchQueue.main.async {
-                NSApp.activate(ignoringOtherApps: true)
-                if let window = NSApp.windows.first {
-                    window.makeKeyAndOrderFront(nil)
+                Task {
+                    await tracker.updateAppList()
+                    NSApp.activate(ignoringOtherApps: true)
                 }
             }
         }
@@ -114,35 +115,82 @@ func fnzDown(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, refcon: 
 }
 
 func fnzUp(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? {
-    if let argRef = refcon { // arg should be isTrackingScrolling
-        let ptr = argRef.assumingMemoryBound(to: UnsafeMutableRawPointer.self)
-        let tracker = Unmanaged<ScrollTrackerState>.fromOpaque(ptr).takeUnretainedValue()
-        
-        if (event.getIntegerValueField(.keyboardEventKeycode) == Keys.keyCode(for: "z") || event.flags.contains(.maskSecondaryFn))
-           && tracker.isTrackingScrolling {
-
-            tracker.isTrackingScrolling = false
-            return nil // Don't pass input through
-        }
+    guard let argRef = refcon else {
+        return Unmanaged.passUnretained(event)
     }
+    
+    let ptr = argRef.assumingMemoryBound(to: UnsafeMutableRawPointer.self)
+    let tracker = Unmanaged<ScrollTrackerState>.fromOpaque(ptr).takeUnretainedValue()
+    
+    if (event.getIntegerValueField(.keyboardEventKeycode) == Keys.keyCode(for: "z") || event.flags.contains(.maskSecondaryFn))
+       && tracker.isTrackingScrolling {
+        
+        let selectedWindowData = tracker.orderedWindows.appIconsWithWindowDescriptionsAndPIDs[tracker.vertScrollDelta/tracker.SENSITIVITY_MULTIPLIER]
+        let selectedWindowIndex = selectedWindowData.2
+        let selectedWindowPID = selectedWindowData.3
+        tracker.isTrackingScrolling = false // Tracking ending happens here because it will reset scrollDelta in the previous line and the next line stalling should not affect performance
+        openWindow(windowIndex: selectedWindowIndex, pid: selectedWindowPID)
+        NSRunningApplication(processIdentifier: selectedWindowPID)?.activate()//.activate(options: .activateIgnoringOtherApps)
+        
+        return nil // Don't pass input through
+    }
+    
     return Unmanaged.passUnretained(event) // Passthrough this input, no harm in doing so
 }
 
-func passthroughScroll(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? {
-    let scroll = event.getIntegerValueField(.scrollWheelEventDeltaAxis1) // Float field still returns <int>.0
-        
-    // MARK: - Get the value of isTrackingScrolling as well
-    if event.flags.contains(.maskSecondaryFn), let argRef = refcon { // arg should be scrollDelta
-        let ptr = argRef.assumingMemoryBound(to: UnsafeMutableRawPointer.self)
-        let tracker = Unmanaged<ScrollTrackerState>.fromOpaque(ptr).takeUnretainedValue()
-
-        // Modify the property (e.g., increase the counter)
-        if tracker.isTrackingScrolling {
-            tracker.scrollDelta = min(max(0, tracker.scrollDelta+Int(scroll)), tracker.maxDelta)
+// All horizontal scroll values here are negative because a pan left triggers delete and also produces a negative value
+func scrollHandler(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? {
+    guard let argRef = refcon, event.flags.contains(.maskSecondaryFn) else {
+        return Unmanaged.passUnretained(event)
+    }
+    let ptr = argRef.assumingMemoryBound(to: UnsafeMutableRawPointer.self)
+    let tracker = Unmanaged<ScrollTrackerState>.fromOpaque(ptr).takeUnretainedValue()
+    
+    let vertDelta = event.getIntegerValueField(.scrollWheelEventDeltaAxis1)
+    let horiDelta = event.getDoubleValueField(.scrollWheelEventDeltaAxis2)
+    let scrollState = event.getIntegerValueField(.scrollWheelEventScrollPhase)
+    let scrollEnded = scrollState == 4 || scrollState == 8 || scrollState == 0 // 2 seems to be actively scrolling, 128 is starting/pre-scroll states
+    
+    if scrollEnded { // Only horizontal scrolls should reset when lifting the fingers, vertical delta is based on the "session" produced by opening the window until it's closed
+        if tracker.horiScrollDelta <= -9.0 {
+            let windowData = tracker.orderedWindows.appIconsWithWindowDescriptionsAndPIDs[tracker.scrolledIdx]
+            closeWindow(windowIndex: windowData.2, pid: windowData.3)
         }
-        
-        return nil // Don't pass the scroll on
+        tracker.horiScrollDelta = 0
+    } else {
+        tracker.horiScrollDelta = min(max(-10.0, tracker.horiScrollDelta+horiDelta), 0.0)
+    }
+    
+    if tracker.horiScrollDelta >= -1.0 {
+        tracker.vertScrollDelta = min(max(0, tracker.vertScrollDelta+Int(vertDelta)), tracker.maxVertDelta)
+        return nil // Don't pass the scroll action to the scrollview
     }
     
     return Unmanaged.passUnretained(event)
+}
+
+func openWindow(windowIndex index: Int, pid: pid_t) {
+    let element = AXUIElementCreateApplication(pid)
+    var windows: CFArray?
+    let error = AXUIElementCopyAttributeValues(element, kAXWindowsAttribute as CFString, 0, 99999, &windows)
+    
+    if error == .success, let windows, CFArrayGetCount(windows) > index {
+        let window = unsafeBitCast(CFArrayGetValueAtIndex(windows, index), to: AXUIElement.self)
+        AXUIElementPerformAction(window, kAXRaiseAction as CFString)
+    }
+}
+
+func closeWindow(windowIndex index: Int, pid: pid_t) {
+    let element = AXUIElementCreateApplication(pid)
+    var windows: CFArray?
+    let windowError = AXUIElementCopyAttributeValues(element, kAXWindowsAttribute as CFString, 0, 99999, &windows)
+      
+    if windowError == .success, let windows, CFArrayGetCount(windows) > index {
+        let window = unsafeBitCast(CFArrayGetValueAtIndex(windows, index), to: AXUIElement.self)
+        var closeButton: CFTypeRef?
+        let closeError = AXUIElementCopyAttributeValue(window, kAXCloseButtonAttribute as CFString, &closeButton)
+        if closeError == .success, let closeButton {
+            AXUIElementPerformAction(closeButton as! AXUIElement, kAXPressAction as CFString)
+        }
+    }
 }
