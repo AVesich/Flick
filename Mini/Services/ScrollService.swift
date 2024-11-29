@@ -10,6 +10,7 @@ import AppKit
 import ApplicationServices
 import Observation
 
+@MainActor
 @Observable class ScrollService {
     // MARK: - Tracking Scrolling state
     public var scrollState = ScrollTrackerState()
@@ -149,20 +150,43 @@ func scrollHandler(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, re
     let horiDelta = event.getDoubleValueField(.scrollWheelEventDeltaAxis2)
     let scrollEnded = Set<Int>([0, 4, 8]).contains(Int(event.getIntegerValueField(.scrollWheelEventScrollPhase))) // 2 seems to be actively scrolling, 128 is starting/pre-scroll states
     
-//    if scrollEnded { // Only horizontal scrolls should reset when lifting the fingers, vertical delta is based on the "session" produced by opening the window until it's closed
-//        if fabs(tracker.horiScrollDelta) > tracker.HORI_SCROLL_SELECTION_THRESHOLD {
-//            tracker.hasSelectedHorizontal = true
-//        } else { // Reset drag delta if selection is not made; Selections reset the drag delta after action is taken in the selection handler
-//            tracker.horiScrollDelta = 0.0
-//        }
+    /*
+     if scrollEnded { // Only horizontal scrolls should reset when lifting the fingers, vertical delta is based on the "session" produced by opening the window until it's closed
+         if tracker.horiScrollDelta <= -9.0 {
+             let windowData = tracker.orderedWindows.appIconsWithWindowDescriptionsAndPIDs[tracker.scrolledIdx]
+             closeWindow(windowIndex: windowData.2, pid: windowData.3)
+         }
+         tracker.horiScrollDelta = 0
+     } else {
+         tracker.horiScrollDelta = min(max(-10.0, tracker.horiScrollDelta+horiDelta), 0.0)
+     }
+     
+     if tracker.horiScrollDelta >= -1.0 {
+         tracker.vertScrollDelta = min(max(0, tracker.vertScrollDelta+Int(vertDelta)), tracker.maxVertDelta)
+         return nil // Don't pass the scroll action to the scrollview
+     }
+     
+     return Unmanaged.passUnretained(event)
+     */
+    
+    
+    if scrollEnded { // Only horizontal scrolls should reset when lifting the fingers, vertical delta is based on the "session" produced by opening the window until it's closed
+        if fabs(tracker.horiScrollDelta) > tracker.HORI_SCROLL_SELECTION_THRESHOLD {
+            print(tracker.hasSelectedHorizontal)
+            tracker.hasSelectedHorizontal = true
+        } else { // Reset drag delta if selection is not made; Selections reset the drag delta after action is taken in the selection handler
+            tracker.horiScrollDelta = 0.0
+        }
 //        return nil
-//    } else {
-//        tracker.horiScrollDelta = min(max(-10.0, tracker.horiScrollDelta+horiDelta), 10.0)
-//        if fabs(tracker.horiScrollDelta) > tracker.HORI_SCROLL_LOCK_THRESHOLD {
-//            return nil
-//        }
-//    }
+    } else {
+        tracker.horiScrollDelta = min(max(-tracker.HORI_SCROLL_SELECTION_THRESHOLD-1.0, tracker.horiScrollDelta+horiDelta), tracker.HORI_SCROLL_SELECTION_THRESHOLD+1.0)
+        if fabs(tracker.horiScrollDelta) > tracker.HORI_SCROLL_LOCK_THRESHOLD { // Don't allow vertical input after horizontal scroll scrosses the threshold
+            return nil
+        }
+    }
     
     tracker.vertScrollDelta = min(max(0, tracker.vertScrollDelta+Int(vertDelta)), tracker.maxVertDelta)
     return nil // Don't pass the vertical scroll action to the scrollview
+//    
+//    return Unmanaged.passUnretained(event)
 }

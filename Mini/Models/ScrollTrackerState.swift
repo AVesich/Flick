@@ -35,12 +35,17 @@ import Observation
     public var vertScrolledIdx: Int = 0
     
     // MARK: - Horizontal Scrolling
+    public var HORI_SCROLL_SELECTION_THRESHOLD: CGFloat = 11.0
+    public var HORI_SCROLL_LOCK_THRESHOLD: CGFloat = 2.0
     public var horiScrollDelta: CGFloat = 0.0
     public var horiScrolledPct: CGFloat {
-        horiScrollDelta/HORI_SENSITIVITY_MULTIPLIER
+        if abs(horiScrollDelta) > HORI_SCROLL_LOCK_THRESHOLD {
+            return (horiScrollDelta < 0.0) ? (horiScrollDelta+HORI_SCROLL_LOCK_THRESHOLD)/HORI_SENSITIVITY_MULTIPLIER :
+                                             (horiScrollDelta-HORI_SCROLL_LOCK_THRESHOLD)/HORI_SENSITIVITY_MULTIPLIER
+        } else {
+            return 0.0
+        }
     }
-    public var HORI_SCROLL_SELECTION_THRESHOLD: CGFloat = 9.0
-    public var HORI_SCROLL_LOCK_THRESHOLD: CGFloat = 1.0
     
     // MARK: - Selection
     // These should be manually changed by whatever handles the selection

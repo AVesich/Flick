@@ -36,14 +36,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 @main
 struct MiniApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @State var scrollService = ScrollService() // Observed
+    private var scrollService = ScrollService() // Observed
     
     @State private var pumpEffectScale: CGFloat = 0.5
     
     var body: some Scene {
         WindowGroup {
             if scrollService.scrollState.isSwitching {
-                WindowSwitchView(scrollState: $scrollService.scrollState)
+                WindowSwitchView(scrollState: scrollService.scrollState)
                     .ignoresSafeArea()
                     .background(.ultraThinMaterial)
                     .clipShape(RoundedRectangle(cornerRadius: 16.0))
