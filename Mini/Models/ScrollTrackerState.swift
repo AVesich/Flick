@@ -9,29 +9,56 @@ import AppKit
 import Observation
 
 @Observable class ScrollTrackerState {
-    public let SENSITIVITY_MULTIPLIER = 5
+    public let VERT_SENSITIVITY_MULTIPLIER = 5
+    public let HORI_SENSITIVITY_MULTIPLIER = 10.0
     
-    public var isTrackingScrolling: Bool = false {
+    // MARK: - General Public Properties
+    public var isSwitching: Bool = false {
         didSet {
-            if !isTrackingScrolling {
+            if !isSwitching {
                 vertScrollDelta = 0
             }
         }
     }
+    
+    // MARK: - Vertical Scrolling
     public var vertScrollDelta: Int = 0 {
         didSet {
-            if vertScrollDelta/SENSITIVITY_MULTIPLIER != oldValue/SENSITIVITY_MULTIPLIER { // Click every 5 scroll ticks, but only once when we first enter a range of 5 nums
-                scrolledIdx = vertScrollDelta/SENSITIVITY_MULTIPLIER
+            if vertScrollDelta/VERT_SENSITIVITY_MULTIPLIER != oldValue/VERT_SENSITIVITY_MULTIPLIER { // Click every 5 scroll ticks, but only once when we first enter a range of 5 nums
+                vertScrolledIdx = vertScrollDelta/VERT_SENSITIVITY_MULTIPLIER
                 horiScrollDelta = 0 // Reset horizontal scrolling when a new window is selected
             }
         }
     }
     public var maxVertDelta: Int {
-        (orderedWindows.appIconsWithWindowDescriptionsAndPIDs.count-1)*SENSITIVITY_MULTIPLIER
+        (orderedWindows.appIconsWithWindowDescriptionsAndPIDs.count-1)*VERT_SENSITIVITY_MULTIPLIER
     }
+    public var vertScrolledIdx: Int = 0
+    
+    // MARK: - Horizontal Scrolling
     public var horiScrollDelta: CGFloat = 0.0
-    public var scrolledIdx: Int = 0
-    public var orderedWindows = OrderedWindows()
+    public var horiScrolledPct: CGFloat {
+        horiScrollDelta/HORI_SENSITIVITY_MULTIPLIER
+    }
+    public var HORI_SCROLL_SELECTION_THRESHOLD: CGFloat = 9.0
+    public var HORI_SCROLL_LOCK_THRESHOLD: CGFloat = 1.0
+    
+    // MARK: - Selection
+    // These should be manually changed by whatever handles the selection
+    public var hasSelectedHorizontal: Bool = false {
+        didSet {
+            if hasSelectedHorizontal == false { // A selection has been made (a window has been removed), reset the vertical index to 0 to immediately return to the frontmost window
+                vertScrollDelta = 0
+            }
+        }
+    }
+    public var hasSelectedVertical: Bool = false
+    
+    // MARK: - Window list updating
+    public var windowData: [(NSImage, String, Int, pid_t)] {
+        orderedWindows.appIconsWithWindowDescriptionsAndPIDs
+    }
+    private var orderedWindows = OrderedWindows()
     
     public func updateAppList() async {
         await orderedWindows.updateAppList()

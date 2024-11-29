@@ -18,8 +18,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let window = NSApp.windows.first {
             makeBackgroundClear(from: window)
             makeBorderless(from: window)
-            window.center()
-            window.setFrame(window.frame.offsetBy(dx: 0, dy: -window.frame.size.height/2+64), display: true)
         }
     }
 
@@ -39,23 +37,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 struct MiniApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     var scrollService = ScrollService() // Observed
-//    var hotkeyService = HotkeyService()
+    
+    @State private var pumpEffectScale: CGFloat = 0.5
     
     var body: some Scene {
         WindowGroup {
-//            ContentView()
-//                .ignoresSafeArea()
-//                .background(.thinMaterial)
-//                .clipShape(RoundedRectangle(cornerRadius: 16.0))
-            if scrollService.scrollState.isTrackingScrolling {
-                WindowSwitchView(windowData: scrollService.windows,
-                                 selectedIndex: scrollService.scrollState.scrolledIdx,
-                                 horizontalDrag: scrollService.scrollState.horiScrollDelta)
+            if scrollService.scrollState.isSwitching {
+                WindowSwitchView(scrollState: scrollService.scrollState)
                     .ignoresSafeArea()
-                    .background(.thickMaterial)
+                    .background(.ultraThinMaterial)
                     .clipShape(RoundedRectangle(cornerRadius: 16.0))
+                    .scaleEffect(pumpEffectScale, anchor: .center)
+                    .animation(.bouncy(duration: 0.1, extraBounce: 0.1), value: pumpEffectScale)
+                    .onAppear {
+                        pumpEffectScale = 1.0
+                    }
+                    .onDisappear {
+                        pumpEffectScale = 0.5
+                    }
             }
         }
+        .defaultPosition(.center)
         .windowResizability(.contentMinSize)
         MenuBarExtra("Mini", systemImage: "hand.pinch.fill") {
             Button("Close Mini") {

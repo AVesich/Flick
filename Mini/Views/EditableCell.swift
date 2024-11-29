@@ -11,7 +11,6 @@ struct EditableCell<Content: View>: View {
     
     public var leftEdit: CGFloat = 0.0
     public var rightEdit: CGFloat = 0.0
-    public var selected: Bool
     
     public var leftColor: Color = .red
     public var leftIcon: Image = Image(systemName: "xmark")
@@ -55,10 +54,10 @@ struct EditableCell<Content: View>: View {
                     
                     RoundedRectangle(cornerRadius: 10.0)
                         .stroke(style: .init(lineWidth: 3.0, lineCap: .round, lineJoin: .round, dash: [12.0, 24.0], dashPhase: dashPhase))
-                        .animation(.linear(duration: 2.0).repeatForever(autoreverses: false), value: dashPhase)
+                        .animation(.linear(duration: 3.0).repeatForever(autoreverses: false), value: dashPhase)
                         .scaleEffect(x: 1+rightEdit/65.0, y: 1-rightEdit/20.0, anchor: .leading)
                         .scaleEffect(x: 1+leftEdit/65.0, y: 1-leftEdit/20.0, anchor: .trailing)
-                        .opacity((currentEdit < 0.9) ? 0.0 : 0.85)
+                        .opacity((currentEdit < 0.9) ? 0.0 : 0.75)
                 }
                 .animation(.easeInOut(duration: 0.15), value: currentEdit)
             }
@@ -75,7 +74,7 @@ struct EditableCell<Content: View>: View {
 }
 
 #Preview {
-    EditableCell(selected: true) {
+    EditableCell() {
         Text("Hello World!")
     }
 }

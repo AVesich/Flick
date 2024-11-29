@@ -19,6 +19,7 @@ import Observation
         }
     }
     
+    // MARK: - Updating Window List
     public func updateAppList() async {
         let windowsToApps = await availableWindowsForApps() // window id:app name
         let appsToIcons = availableAppIcons() // app name:app icon
@@ -33,6 +34,7 @@ import Observation
         }
     }
         
+    // MARK: - Private Window List Helpers
     private func availableWindowsForApps() async -> [CGWindowID:String] { // window id:app name
         let windows = (try? await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true))?.windows ?? [SCWindow]()
         
@@ -77,4 +79,32 @@ import Observation
             )
         )
     }
+    
+    // MARK: - Static Window Helpers (Open/Close)
+    static func openWindow(windowIndex index: Int, pid: pid_t) {
+        let element = AXUIElementCreateApplication(pid)
+        var windows: CFArray?
+        let error = AXUIElementCopyAttributeValues(element, kAXWindowsAttribute as CFString, 0, 99999, &windows)
+        
+        if error == .success, let windows, CFArrayGetCount(windows) > index {
+            let window = unsafeBitCast(CFArrayGetValueAtIndex(windows, index), to: AXUIElement.self)
+            AXUIElementPerformAction(window, kAXRaiseAction as CFString)
+        }
+    }
+
+    static func closeWindow(windowIndex index: Int, pid: pid_t) {
+        let element = AXUIElementCreateApplication(pid)
+        var windows: CFArray?
+        let windowError = AXUIElementCopyAttributeValues(element, kAXWindowsAttribute as CFString, 0, 99999, &windows)
+          
+        if windowError == .success, let windows, CFArrayGetCount(windows) > index {
+            let window = unsafeBitCast(CFArrayGetValueAtIndex(windows, index), to: AXUIElement.self)
+            var closeButton: CFTypeRef?
+            let closeError = AXUIElementCopyAttributeValue(window, kAXCloseButtonAttribute as CFString, &closeButton)
+            if closeError == .success, let closeButton {
+                AXUIElementPerformAction(closeButton as! AXUIElement, kAXPressAction as CFString)
+            }
+        }
+    }
+
 }

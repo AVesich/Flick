@@ -13,9 +13,6 @@ import Observation
 @Observable class ScrollService {
     // MARK: - Tracking Scrolling state
     public var scrollState = ScrollTrackerState()
-    public var windows: [(NSImage, String, Int, pid_t)] {
-        return scrollState.orderedWindows.appIconsWithWindowDescriptionsAndPIDs
-    }
     private var started: Bool = false
     
     // MARK: - Initialization
@@ -99,8 +96,8 @@ func fnzDown(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, refcon: 
         let ptr = argRef.assumingMemoryBound(to: UnsafeMutableRawPointer.self)
         let tracker = Unmanaged<ScrollTrackerState>.fromOpaque(ptr).takeUnretainedValue()
         
-        if !tracker.isTrackingScrolling {
-            tracker.isTrackingScrolling = true
+        if !tracker.isSwitching {
+            tracker.isSwitching = true
             DispatchQueue.main.async {
                 Task {
                     await tracker.updateAppList()
@@ -118,19 +115,21 @@ func fnzUp(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, refcon: Un
     guard let argRef = refcon else {
         return Unmanaged.passUnretained(event)
     }
-    
     let ptr = argRef.assumingMemoryBound(to: UnsafeMutableRawPointer.self)
     let tracker = Unmanaged<ScrollTrackerState>.fromOpaque(ptr).takeUnretainedValue()
     
     if (event.getIntegerValueField(.keyboardEventKeycode) == Keys.keyCode(for: "z") || event.flags.contains(.maskSecondaryFn))
-       && tracker.isTrackingScrolling {
-        
-        let selectedWindowData = tracker.orderedWindows.appIconsWithWindowDescriptionsAndPIDs[tracker.vertScrollDelta/tracker.SENSITIVITY_MULTIPLIER]
-        let selectedWindowIndex = selectedWindowData.2
-        let selectedWindowPID = selectedWindowData.3
-        tracker.isTrackingScrolling = false // Tracking ending happens here because it will reset scrollDelta in the previous line and the next line stalling should not affect performance
-        openWindow(windowIndex: selectedWindowIndex, pid: selectedWindowPID)
-        NSRunningApplication(processIdentifier: selectedWindowPID)?.activate()//.activate(options: .activateIgnoringOtherApps)
+        && tracker.isSwitching {
+        tracker.hasSelectedVertical = true
+        tracker.isSwitching = false
+//        && !tracker.orderedWindows.appIconsWithWindowDescriptionsAndPIDs.isEmpty
+//        && !tracker.isSelectingHoriScrolling {
+//        
+//        let selectedWindowData = tracker.orderedWindows.appIconsWithWindowDescriptionsAndPIDs[tracker.vertScrollDelta/tracker.SENSITIVITY_MULTIPLIER]
+//        let selectedWindowIndex = selectedWindowData.2
+//        let selectedWindowPID = selectedWindowData.3
+//        openWindow(windowIndex: selectedWindowIndex, pid: selectedWindowPID)
+//        NSRunningApplication(processIdentifier: selectedWindowPID)?.activate()//.activate(options: .activateIgnoringOtherApps)
         
         return nil // Don't pass input through
     }
@@ -148,49 +147,27 @@ func scrollHandler(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, re
     
     let vertDelta = event.getIntegerValueField(.scrollWheelEventDeltaAxis1)
     let horiDelta = event.getDoubleValueField(.scrollWheelEventDeltaAxis2)
-    let scrollState = event.getIntegerValueField(.scrollWheelEventScrollPhase)
-    let scrollEnded = scrollState == 4 || scrollState == 8 || scrollState == 0 // 2 seems to be actively scrolling, 128 is starting/pre-scroll states
+    let scrollEnded = Set<Int>([0, 4, 8]).contains(Int(event.getIntegerValueField(.scrollWheelEventScrollPhase))) // 2 seems to be actively scrolling, 128 is starting/pre-scroll states
+    print(Int(event.getIntegerValueField(.scrollWheelEventScrollPhase)))
+    print(scrollEnded)
+    print(fabs(tracker.horiScrollDelta))
     
     if scrollEnded { // Only horizontal scrolls should reset when lifting the fingers, vertical delta is based on the "session" produced by opening the window until it's closed
-        if tracker.horiScrollDelta <= -9.0 {
-            let windowData = tracker.orderedWindows.appIconsWithWindowDescriptionsAndPIDs[tracker.scrolledIdx]
-            closeWindow(windowIndex: windowData.2, pid: windowData.3)
+        if fabs(tracker.horiScrollDelta) >= tracker.HORI_SCROLL_SELECTION_THRESHOLD {
+            tracker.hasSelectedHorizontal = true
+        } else { // Reset drag delta if selection is not made; Selections reset the drag delta after action is taken in the selection handler
+            tracker.horiScrollDelta = 0
         }
-        tracker.horiScrollDelta = 0
+        return Unmanaged.passUnretained(event)
     } else {
-        tracker.horiScrollDelta = min(max(-10.0, tracker.horiScrollDelta+horiDelta), 0.0)
+        tracker.horiScrollDelta = min(max(-10.0, tracker.horiScrollDelta+horiDelta), 10.0)
+        if fabs(tracker.horiScrollDelta) > tracker.HORI_SCROLL_LOCK_THRESHOLD {
+            return Unmanaged.passUnretained(event)
+        }
     }
     
-    if tracker.horiScrollDelta >= -1.0 {
-        tracker.vertScrollDelta = min(max(0, tracker.vertScrollDelta+Int(vertDelta)), tracker.maxVertDelta)
-        return nil // Don't pass the scroll action to the scrollview
-    }
+    tracker.vertScrollDelta = min(max(0, tracker.vertScrollDelta+Int(vertDelta)), tracker.maxVertDelta)
+    return nil // Don't pass the scroll action to the scrollview
     
     return Unmanaged.passUnretained(event)
-}
-
-func openWindow(windowIndex index: Int, pid: pid_t) {
-    let element = AXUIElementCreateApplication(pid)
-    var windows: CFArray?
-    let error = AXUIElementCopyAttributeValues(element, kAXWindowsAttribute as CFString, 0, 99999, &windows)
-    
-    if error == .success, let windows, CFArrayGetCount(windows) > index {
-        let window = unsafeBitCast(CFArrayGetValueAtIndex(windows, index), to: AXUIElement.self)
-        AXUIElementPerformAction(window, kAXRaiseAction as CFString)
-    }
-}
-
-func closeWindow(windowIndex index: Int, pid: pid_t) {
-    let element = AXUIElementCreateApplication(pid)
-    var windows: CFArray?
-    let windowError = AXUIElementCopyAttributeValues(element, kAXWindowsAttribute as CFString, 0, 99999, &windows)
-      
-    if windowError == .success, let windows, CFArrayGetCount(windows) > index {
-        let window = unsafeBitCast(CFArrayGetValueAtIndex(windows, index), to: AXUIElement.self)
-        var closeButton: CFTypeRef?
-        let closeError = AXUIElementCopyAttributeValue(window, kAXCloseButtonAttribute as CFString, &closeButton)
-        if closeError == .success, let closeButton {
-            AXUIElementPerformAction(closeButton as! AXUIElement, kAXPressAction as CFString)
-        }
-    }
 }
