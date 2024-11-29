@@ -15,7 +15,7 @@ import Observation
     // MARK: - General Public Properties
     public var isSwitching: Bool = false {
         didSet {
-            if !isSwitching {
+            if isSwitching { // Upon appearance, reset the vertical scroll delta
                 vertScrollDelta = 0
             }
         }
@@ -26,7 +26,6 @@ import Observation
         didSet {
             if vertScrollDelta/VERT_SENSITIVITY_MULTIPLIER != oldValue/VERT_SENSITIVITY_MULTIPLIER { // Click every 5 scroll ticks, but only once when we first enter a range of 5 nums
                 vertScrolledIdx = vertScrollDelta/VERT_SENSITIVITY_MULTIPLIER
-                horiScrollDelta = 0 // Reset horizontal scrolling when a new window is selected
             }
         }
     }

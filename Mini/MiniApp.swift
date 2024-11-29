@@ -36,20 +36,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 @main
 struct MiniApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    var scrollService = ScrollService() // Observed
+    @State var scrollService = ScrollService() // Observed
     
     @State private var pumpEffectScale: CGFloat = 0.5
     
     var body: some Scene {
         WindowGroup {
             if scrollService.scrollState.isSwitching {
-                WindowSwitchView(scrollState: scrollService.scrollState)
+                WindowSwitchView(scrollState: $scrollService.scrollState)
                     .ignoresSafeArea()
                     .background(.ultraThinMaterial)
                     .clipShape(RoundedRectangle(cornerRadius: 16.0))
                     .scaleEffect(pumpEffectScale, anchor: .center)
                     .animation(.bouncy(duration: 0.1, extraBounce: 0.1), value: pumpEffectScale)
                     .onAppear {
+                        Task {
+                            await scrollService.scrollState.updateAppList()
+                        }
                         pumpEffectScale = 1.0
                     }
                     .onDisappear {

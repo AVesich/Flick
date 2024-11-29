@@ -9,7 +9,7 @@ import SwiftUI
 
 struct WindowSwitchView: View {
     
-    public var scrollState: ScrollTrackerState
+    @Binding public var scrollState: ScrollTrackerState
     private var selectedIndex: Int {
         scrollState.vertScrolledIdx
     }
@@ -50,6 +50,7 @@ struct WindowSwitchView: View {
             }
             .onChange(of: scrollState.hasSelectedHorizontal) { _, new in
                 if new==true {
+                    print(horizontalDrag)
                     if horizontalDrag < 0.0 { // Left drag for delete
                         OrderedWindows.closeWindow(windowIndex: scrollState.windowData[selectedIndex].2,
                                                    pid: scrollState.windowData[selectedIndex].3)
@@ -60,8 +61,11 @@ struct WindowSwitchView: View {
                     } else {
 
                     }
-                    scrollState.hasSelectedVertical = false
+                    scrollState.hasSelectedHorizontal = false
                 }
+            }
+            .onChange(of: selectedIndex) {
+                print(selectedIndex)
             }
         } // ScrollViewReader
         .frame(maxWidth: 256.0, maxHeight: 256.0)
@@ -69,5 +73,5 @@ struct WindowSwitchView: View {
 }
 
 #Preview {
-    WindowSwitchView(scrollState: ScrollService().scrollState)
+    WindowSwitchView(scrollState: .constant(ScrollService().scrollState))
 }

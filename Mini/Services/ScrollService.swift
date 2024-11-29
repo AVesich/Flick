@@ -148,26 +148,21 @@ func scrollHandler(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, re
     let vertDelta = event.getIntegerValueField(.scrollWheelEventDeltaAxis1)
     let horiDelta = event.getDoubleValueField(.scrollWheelEventDeltaAxis2)
     let scrollEnded = Set<Int>([0, 4, 8]).contains(Int(event.getIntegerValueField(.scrollWheelEventScrollPhase))) // 2 seems to be actively scrolling, 128 is starting/pre-scroll states
-    print(Int(event.getIntegerValueField(.scrollWheelEventScrollPhase)))
-    print(scrollEnded)
-    print(fabs(tracker.horiScrollDelta))
     
-    if scrollEnded { // Only horizontal scrolls should reset when lifting the fingers, vertical delta is based on the "session" produced by opening the window until it's closed
-        if fabs(tracker.horiScrollDelta) >= tracker.HORI_SCROLL_SELECTION_THRESHOLD {
-            tracker.hasSelectedHorizontal = true
-        } else { // Reset drag delta if selection is not made; Selections reset the drag delta after action is taken in the selection handler
-            tracker.horiScrollDelta = 0
-        }
-        return Unmanaged.passUnretained(event)
-    } else {
-        tracker.horiScrollDelta = min(max(-10.0, tracker.horiScrollDelta+horiDelta), 10.0)
-        if fabs(tracker.horiScrollDelta) > tracker.HORI_SCROLL_LOCK_THRESHOLD {
-            return Unmanaged.passUnretained(event)
-        }
-    }
+//    if scrollEnded { // Only horizontal scrolls should reset when lifting the fingers, vertical delta is based on the "session" produced by opening the window until it's closed
+//        if fabs(tracker.horiScrollDelta) > tracker.HORI_SCROLL_SELECTION_THRESHOLD {
+//            tracker.hasSelectedHorizontal = true
+//        } else { // Reset drag delta if selection is not made; Selections reset the drag delta after action is taken in the selection handler
+//            tracker.horiScrollDelta = 0.0
+//        }
+//        return nil
+//    } else {
+//        tracker.horiScrollDelta = min(max(-10.0, tracker.horiScrollDelta+horiDelta), 10.0)
+//        if fabs(tracker.horiScrollDelta) > tracker.HORI_SCROLL_LOCK_THRESHOLD {
+//            return nil
+//        }
+//    }
     
     tracker.vertScrollDelta = min(max(0, tracker.vertScrollDelta+Int(vertDelta)), tracker.maxVertDelta)
-    return nil // Don't pass the scroll action to the scrollview
-    
-    return Unmanaged.passUnretained(event)
+    return nil // Don't pass the vertical scroll action to the scrollview
 }
