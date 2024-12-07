@@ -54,12 +54,36 @@ enum ScrollSector {
     case topLeftSixth
     case topMiddleSixth
     case topRightSixth
-    case leftSixth
-    case middleSixth
-    case rightSixth
+    case leftThird
+    case middleThird
+    case rightThird
     case bottomLeftSixth
     case bottomMiddleSixth
     case bottomRightSixth
+    
+    
+    
+    // FOR DEBUG
+    var name: String {
+        switch self {
+        case .full: return "Full"
+        case .topLeftQuarter: return "Top Left Quarter"
+        case .topRightQuarter: return "Top Right Quarter"
+        case .leftHalf: return "Left Half"
+        case .rightHalf: return "Right Half"
+        case .bottomLeftQuarter: return "Bottom Left Quarter"
+        case .bottomRightQuarter: return "Bottom Right Quarter"
+        case .topLeftSixth: return "Top Left Sixth"
+        case .topMiddleSixth: return "Top Middle Sixth"
+        case .topRightSixth: return "Top Right Sixth"
+        case .leftThird: return "Left Third"
+        case .middleThird: return "Middle Third"
+        case .rightThird: return "Right Third"
+        case .bottomLeftSixth: return "Bottom Left Sixth"
+        case .bottomMiddleSixth: return "Bottom Middle Sixth"
+        case .bottomRightSixth: return "Bottom Right Sixth"
+        }
+    }
 }
 
 struct PanTrackerView: NSViewRepresentable {
@@ -84,6 +108,7 @@ struct PanTrackerView: NSViewRepresentable {
 
             trackScrollPosition(fromEvent: event)
             scrollSector.wrappedValue = currentSector()
+            print(scrollSector.wrappedValue.name)
         }
         
         private func trackScrollPosition(fromEvent event: NSEvent) {
@@ -100,19 +125,32 @@ struct PanTrackerView: NSViewRepresentable {
                 totalY += event.scrollingDeltaY
             }
                     
-            print("(\(totalX), \(totalY))")
+//            print("(\(totalX), \(totalY))")
         }
         
         private func currentSector() -> ScrollSector {
             var point = CGPoint(x: totalX, y: totalY)
             
-            if touchCount == 2 {
-                
-            } else { // 2+ behaves as 3
-                
-            }
+            print(touchCount.wrappedValue)
             
-            return .leftHalf
+            if touchCount.wrappedValue == 2 {
+                if totalY > (SENSITIVITY_BOX_SIZE/2.0) { // bottom third (snap to bottom corner)
+                    return (totalX >= 0.0) ? .bottomRightQuarter : .bottomLeftQuarter
+                } else if totalY < -(SENSITIVITY_BOX_SIZE/2.0) { // top third (snap to top corner)
+                    return (totalX >= 0.0) ? .topRightQuarter : .topLeftQuarter
+                } else { // middle third (snap to side)
+                    return (totalX >= 0.0) ? .rightHalf : .leftHalf
+                }
+            } else { // 2+ behaves as 3
+                let third = (totalX < -(SENSITIVITY_BOX_SIZE/2.0)) ? 0 : (totalX > (SENSITIVITY_BOX_SIZE/2.0)) ? 2 : 1 // Left to right: 0 1 2
+                if totalY > (SENSITIVITY_BOX_SIZE/2.0) { // bottom third (snap to bottom corner)
+                    return (third == 1) ? .bottomMiddleSixth : (third == 0) ? .bottomLeftSixth : .bottomRightSixth
+                } else if totalY < -(SENSITIVITY_BOX_SIZE/2.0) { // top third (snap to top corner)
+                    return (third == 1) ? .topMiddleSixth : (third == 0) ? .topLeftSixth : .topRightSixth
+                } else { // middle third (snap to side)
+                    return (third == 1) ? .middleThird : (third == 0) ? .leftThird : .rightThird
+                }
+            }
         }
     }
 
