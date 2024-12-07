@@ -29,7 +29,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func makeBorderless(from window: NSWindow) {
         // Make background clear
         window.styleMask = [.borderless]
-        window.hidesOnDeactivate = true
+//        window.hidesOnDeactivate = true
     }
 }
 
@@ -42,23 +42,25 @@ struct MiniApp: App {
     
     var body: some Scene {
         WindowGroup {
-            if scrollService.scrollState.isSwitching {
-                WindowSwitchView(scrollState: scrollService.scrollState)
-                    .ignoresSafeArea()
-                    .background(.ultraThinMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 16.0))
-                    .scaleEffect(pumpEffectScale, anchor: .center)
-                    .animation(.bouncy(duration: 0.1, extraBounce: 0.1), value: pumpEffectScale)
-                    .onAppear {
-                        Task {
-                            await scrollService.scrollState.updateAppList()
-                        }
-                        pumpEffectScale = 1.0
-                    }
-                    .onDisappear {
-                        pumpEffectScale = 0.5
-                    }
-            }
+//            if scrollService.scrollState.isArrangingWindows {
+            WindowResizeView()
+//            } else if scrollService.scrollState.isSwitching {
+//                WindowSwitchView(scrollState: scrollService.scrollState)
+//                    .ignoresSafeArea()
+//                    .background(.ultraThinMaterial)
+//                    .clipShape(RoundedRectangle(cornerRadius: 16.0))
+//                    .scaleEffect(pumpEffectScale, anchor: .center)
+//                    .animation(.bouncy(duration: 0.1, extraBounce: 0.1), value: pumpEffectScale)
+//                    .onAppear {
+//                        Task {
+//                            await scrollService.scrollState.updateAppList()
+//                        }
+//                        pumpEffectScale = 1.0
+//                    }
+//                    .onDisappear {
+//                        pumpEffectScale = 0.5
+//                    }
+//            }
         }
         .defaultPosition(.center)
         .windowResizability(.contentMinSize)

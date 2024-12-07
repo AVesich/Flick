@@ -20,7 +20,7 @@ import Observation
     }
     
     // MARK: - Updating Window List
-    public func updateAppList() async {
+    public func updateAppList() async {        
         let windowsToApps = await availableWindowsForApps() // window id:app name
         let appsToIcons = availableAppIcons() // app name:app icon
         let (orderedWindows, windowsToDescriptionsAndPIDs) = availableWindowIDsWithDescriptions() // ordered window ids (f-to-b), window id:(window name, window index, app pid)
@@ -79,7 +79,7 @@ import Observation
             )
         )
     }
-    
+        
     // MARK: - Static Window Helpers (Open/Close)
     static func openWindow(windowIndex index: Int, pid: pid_t) {
         let element = AXUIElementCreateApplication(pid)

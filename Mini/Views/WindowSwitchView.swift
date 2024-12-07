@@ -62,10 +62,10 @@ struct WindowSwitchView: View {
                         Task {
                             await scrollState.updateAppList()
                         }
+                        scrollState.hasSelectedHorizontal = false
                     } else {
-                        scrollState.horiScrollDelta = 0.0
+                        scrollState.isArrangingWindows = true
                     }
-                    scrollState.hasSelectedHorizontal = false
                 }
             }
         } // ScrollViewReader

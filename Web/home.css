@@ -1,0 +1,274 @@
+@font-face {
+    font-family: 'Gotham Bold';
+    src: url('./Resources/GothamBold.ttf') format('ttf');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Onest';
+    src: url('./Resources/Onest-Bold.ttf') format('ttf'),
+         url('./Resources/Onest-Medium.ttf') format('ttf'),
+         url('./Resources/Onest-Regular.ttf') format('ttf');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Olympe Mono Hacked';
+    src: url('./Resources/OlympeMonoHacked-Regular-ok.ttf') format('ttf');
+    font-weight: bold;
+    font-style: normal;
+}
+
+html {
+    --white: rgba(250, 250, 250, 1);
+    --black: rgba(33, 36, 39, 1.0);
+    --midOpBlack: rgba(33, 36, 39, 0.5);
+    --lowOpBlack: rgba(33, 36, 39, 0.1);
+    --veridian: rgba(11, 55, 38, 1);
+
+    --xLargeSpacing: 6rem;
+    --largeSpacing: 4rem;
+    --medSpacing: 2rem;
+    --smallSpacing: 1rem;
+
+    background-color: var(--white);
+    font-family: 'Onest', sans-serif;
+}
+
+/* General - Body */
+body {
+    margin: 0;
+}
+
+/* General - Util - Hide scrollbar */
+::-webkit-scrollbar {
+    display: none;  /* Hide the scrollbar */
+}
+
+/* General - Pointer */
+button {
+    cursor: pointer;
+}
+
+a {
+    cursor: pointer;
+}
+
+/* General - Links */
+a { /* Use whatever styling the element should have by default, don't underline or color it blue/purple */
+    text-decoration: none;
+    color: inherit;
+}
+
+/* General - Lists */
+ol {
+    margin: 0;
+}
+
+ol > li {
+    line-height: 1.5rem;
+}
+
+ol > li > title {
+    color: var(--black);
+    display: inline;
+    line-height: 1.35rem;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+ol > li > p {
+    color: var(--midOpBlack);
+    display: inline;
+    line-height: 1.35rem;
+    font-size: 1rem;
+    font-weight: 400;
+}
+
+/* General - Headers */
+h1 {
+    font-family: 'Gotham Bold', sans-serif;
+    font-weight: bold;
+    font-size: 2rem;
+    margin: 0;
+}
+
+/* General - '*'s or subtitles */
+sub {
+    color: var(--midOpBlack);
+    display: inline;
+    font-size: 0.7rem;
+}
+
+/* Icons */
+img {
+    aspect-ratio: 1 / 1;
+}
+
+.round {
+    border-radius: 50%;
+}
+
+.sixty4 {
+    height: 64px;
+    width: 64px;
+}
+
+.thirty6 {
+    height: 36px;
+    width: 36px;
+}
+
+.sixteen {
+    height: 20px;
+    width: 20px;
+}
+
+/* Header */
+body > header {
+    display: flex;
+    flex-direction: row;
+    gap: var(--medSpacing);
+    justify-content: center;
+    padding: var(--medSpacing) 0;
+}
+
+body > header > button {
+    background-color: transparent;
+    border: none;
+    font-family: 'Onest';
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+/* Sections */
+body > section:nth-of-type(even) {
+    background-color: var(--lowOpBlack);
+}
+
+body > section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--medSpacing);
+    padding: var(--largeSpacing) var(--xLargeSpacing);
+}
+
+body > #hero {
+    align-items: center;
+    gap: var(--largeSpacing);
+    height: 70vh;
+    justify-content: center;
+    text-align: center;
+}
+
+body > #hero div {
+    max-width: 760px;
+}
+
+body > #hero h1 {
+    font-family: 'Olympe Mono Hacked', cursive;
+    font-weight: normal;
+    font-size: 7rem;
+}
+
+body > #hero #titleGif {
+    height: 256px;
+    width: 512px;
+    
+}
+
+body > #hero title {
+    display: block;
+    font-weight: 500;
+    font-size: 1.5rem;
+}
+
+body > #hero p {
+    color: var(--midOpBlack);
+}
+
+body > #hero #buttons {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+}
+
+body > #hero button {
+    background-color: transparent;
+    border: none;
+    border-radius: 10px;
+    color: var(--white);
+    display: inline-flex;
+    font-family: 'Onest', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    padding: 0.8rem 1.5rem;
+}
+
+body > #hero button.free {
+    background-color: var(--black);
+}
+
+body > #hero button.pro {
+    background-color: var(--veridian);
+}
+
+body > #comparison > .table-wrapper {
+    overflow: auto;
+    border-radius: 1rem;
+}
+
+body > #comparison table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    width: 100%;
+}
+
+body > #comparison th, td {
+    border-bottom: 2px solid var(--midOpBlack);
+}
+
+body > #comparison tr {
+    background-color: var(--lowOpBlack);
+    height: 5rem;
+    text-align: center;
+}
+
+body > #comparison tr:last-child { /* Last row */
+    background-color: var(--veridian);
+    color: var(--white);
+}
+
+
+/* Footer */
+body > footer {
+    color: var(--midOpBlack);
+    display: flex;
+    flex-direction: column;
+    gap: var(--medSpacing);
+    justify-content: center;
+    padding: var(--largeSpacing) var(--xLargeSpacing);
+}
+
+body > footer div {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-content: center;
+}
+
+div#ID {
+    gap: var(--smallSpacing);
+}
+
+div#ID > h1 {
+    font-size: 1.2rem;
+    height: 1.2rem;
+    margin: auto 0;
+}
+
+div#icons {
+    gap: var(--medSpacing);
+}

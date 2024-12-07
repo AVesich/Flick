@@ -18,6 +18,17 @@ import Observation
             if isSwitching { // Upon appearance, reset the vertical scroll delta
                 vertScrollDelta = 0
             }
+            if !isSwitching && isArrangingWindows {
+                isArrangingWindows = false
+                hasSelectedHorizontal = false
+            }
+        }
+    }
+    public var isArrangingWindows: Bool = false {
+        didSet {
+//            if !isArrangingWindows { // If arranging stops, switching windows should stop so that the arranged window is brought to the front
+//                isSwitching = false
+//            }
         }
     }
     
