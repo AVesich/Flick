@@ -59,9 +59,6 @@ struct FlickApp: App {
                             pumpEffectScale = 0.001
                         }
                     }
-                if scrollService.scrollState.isArrangingWindows {
-                    WindowResizeView(scrollState: scrollService.scrollState)
-                }
             }
         }
         .defaultPosition(.center)

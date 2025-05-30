@@ -16,9 +16,6 @@ struct WindowSwitchView: View {
     private var windowData: [Window] {
         scrollState.windowData
     }
-    private var horizontalDrag: CGFloat {
-        scrollState.horiScrolledPct
-    }
 
     var body: some View {
         ScrollViewReader { scrollView in
@@ -34,13 +31,9 @@ struct WindowSwitchView: View {
                         
                     ForEach(Array(windowData.enumerated()), id:\.offset) { (index, window) in
                         HoverCell(hovering: (index+ScrollConfigConstants.NUM_PRE_WINDOW_SCROLL_OPTIONS == selectedIndex)) { hovering in
-//                            EditableCell(leftEdit: hovering ? max(-horizontalDrag, 0) : 0,
-//                                         rightEdit: hovering ? max(horizontalDrag, 0) : 0,
-//                                         rightIcon: Image(systemName: "macwindow")) {
-                                WindowCell(scrollState: scrollState,
-                                           hovering: hovering,
-                                           window: window)
-//                            }
+                            WindowCell(scrollState: scrollState,
+                                       hovering: hovering,
+                                       window: window)
                         }
                         .id(index+ScrollConfigConstants.NUM_PRE_WINDOW_SCROLL_OPTIONS)
                         .padding(.bottom, (index == windowData.count-1) ? 10.0 : 0.0)
@@ -54,23 +47,6 @@ struct WindowSwitchView: View {
                     scrollView.scrollTo(min(selectedIndex+1, windowData.count), anchor: .bottom)
                 }
             }
-//            .onChange(of: scrollState.hasSelectedHorizontal) { _, selected in
-//                if selected == true {
-//                    if horizontalDrag < 0.0 { // Left drag for delete
-//                        OrderedWindows.closeWindow(windowIndex: windowData[selectedIndex].2,
-//                                                   pid: windowData[selectedIndex].3)
-//                        scrollState.horiScrollDelta = 0.0 // Must retain value until this point so that horizontalDrag is correct
-//                        Task {
-//                            await scrollState.updateAppList()
-//                        }
-//                        scrollState.hasSelectedHorizontal = false
-//                    } else {
-//                        scrollState.horiScrollDelta = 0.0
-//                        scrollState.hasSelectedVertical = true // Bring window to front before arranging it
-//                        scrollState.isArrangingWindows = true
-//                    }
-//                }
-//            }
         } // ScrollViewReader
         .frame(maxWidth: VisualConfigConstants.windowWidth, maxHeight: VisualConfigConstants.windowHeight)
     }
