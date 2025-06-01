@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct HoverCell<Content: View>: View {
+struct SelectableCell<Content: View>: View {
     
     public var hovering: Bool!
     public var content: (_ hovering: Bool) -> Content
@@ -18,7 +18,7 @@ struct HoverCell<Content: View>: View {
 }
 
 #Preview {
-    HoverCell(hovering: true) { selected in
+    SelectableCell(hovering: true) { selected in
         Text("Hello World!")
     }
 }
