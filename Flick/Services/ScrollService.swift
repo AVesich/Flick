@@ -13,7 +13,6 @@ import Observation
 @MainActor
 @Observable class ScrollService {
     // MARK: - Tracking Scrolling state
-    public var scrollState = ScrollTrackerState()
     private var started: Bool = false
     
     // MARK: - Initialization
@@ -23,108 +22,71 @@ import Observation
         }
         started = true
         
-        if let keyDownEvent = registerKeyDownEvent(),
-           let keyUpEvent = registerKeyUpEvent(),
-           let scrollEvent = registerScrollEvent()
-        {
-            Task {
-                startRunLoopForEvent(keyDownEvent)
+        if let keyDownEvent = registerEvent(withBitmask: 1 << CGEventType.keyDown.rawValue, callback: hotkeyDown),
+           let keyUpEvent = registerEvent(withBitmask: 1 << CGEventType.keyUp.rawValue, callback: hotkeyUp),
+           let scrollEvent = registerEvent(withBitmask: 1 << CGEventType.scrollWheel.rawValue, callback: scrollHandler) {
+            Task { [weak self] in
+                self?.startRunLoopForEvent(keyDownEvent)
             }
-            Task {
-                startRunLoopForEvent(keyUpEvent)
+            Task { [weak self] in
+                self?.startRunLoopForEvent(keyUpEvent)
             }
-            Task {
-                startRunLoopForEvent(scrollEvent)
+            Task { [weak self] in
+                self?.startRunLoopForEvent(scrollEvent)
             }
         } else {
             // TODO: - Show oops dialog
         }
     }
-        
+    
     // MARK: - Event registration
-    private func registerKeyDownEvent() -> CFMachPort? {
-        let buttonDownBitMask = 1 << CGEventType.keyDown.rawValue
-        let buttonDownMask = CGEventMask(buttonDownBitMask)
-        let ptr = UnsafeMutableRawPointer(Unmanaged.passUnretained(scrollState).toOpaque())
+    private func registerEvent(withBitmask bitmask: Int, callback: CGEventTapCallBack) -> CFMachPort? {
+        let mask = CGEventMask(bitmask)
         return CGEvent.tapCreate(tap: .cgSessionEventTap,
                                  place: .tailAppendEventTap,
                                  options: .defaultTap,
-                                 eventsOfInterest: buttonDownMask,
-                                 callback: fnzDown,
-                                 userInfo: ptr)
-    }
-    
-    private func registerKeyUpEvent() -> CFMachPort? {
-        let buttonDownBitMask = 1 << CGEventType.keyUp.rawValue
-        let buttonDownMask = CGEventMask(buttonDownBitMask)
-        let ptr = UnsafeMutableRawPointer(Unmanaged.passUnretained(scrollState).toOpaque())
-        return CGEvent.tapCreate(tap: .cgSessionEventTap,
-                                 place: .tailAppendEventTap,
-                                 options: .defaultTap,
-                                 eventsOfInterest: buttonDownMask,
-                                 callback: fnzUp,
-                                 userInfo: ptr)
-    }
-    
-    private func registerScrollEvent() -> CFMachPort? {
-        let scrollBitMask = 1 << CGEventType.scrollWheel.rawValue
-        let scrollMask = CGEventMask(scrollBitMask)
-        let ptr = UnsafeMutableRawPointer(Unmanaged.passUnretained(scrollState).toOpaque())
-        return CGEvent.tapCreate(tap: .cgSessionEventTap,
-                                 place: .tailAppendEventTap,
-                                 options: .defaultTap,
-                                 eventsOfInterest: scrollMask,
-                                 callback: scrollHandler,
-                                 userInfo: ptr)
+                                 eventsOfInterest: mask,
+                                 callback: callback,
+                                 userInfo: nil)
     }
     
     // MARK: - Event running
     // For context, CFRunLoop is in charge of control & input dispatch for a task
     private func startRunLoopForEvent(_ event: CFMachPort) {
-        let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, event, 0)
+        let runLoopSource = CFMachPortCreateRunLoopSource(nil, event, 0)
         CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
         CGEvent.tapEnable(tap: event, enable: true)
-        CFRunLoopRun()
     }
 }
 
 // MARK: - Event handling
-func fnzDown(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? {
-    if event.getIntegerValueField(.keyboardEventKeycode) == Keys.keyCode(for: "tab") && event.flags.contains(.maskAlternate),
-       let stateRef = refcon {
-
-        let ptr = stateRef.assumingMemoryBound(to: UnsafeMutableRawPointer.self)
-        let tracker = Unmanaged<ScrollTrackerState>.fromOpaque(ptr).takeUnretainedValue()
-        
-        if !tracker.isSwitching {
-            tracker.isSwitching = true
+let TAB_KEYCODE = 48
+func hotkeyDown(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? {
+    if ScrollConfigConstants.SHORTCUT.isPressed(event: event) {
+        if !ScrollTrackingSharedState.shared.hotkeyDown {
+            ScrollTrackingSharedState.shared.hotkeyDown = true
             DispatchQueue.main.async {
                 Task {
-                    await tracker.updateAppList()
                     NSApp.activate(ignoringOtherApps: true)
-                    NSApp.windows.first?.makeKeyAndOrderFront(nil)
+                    NSApp.fakeActivate()
                 }
             }
         }
-        return nil // Don't pass input through any fn + z
+        
+        return nil
     }
     
     return Unmanaged.passUnretained(event) // Passthrough this input, no harm in doing so
 }
 
-func fnzUp(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? {
-    guard let stateRef = refcon else {
-        return Unmanaged.passUnretained(event)
-    }
-    let ptr = stateRef.assumingMemoryBound(to: UnsafeMutableRawPointer.self)
-    let tracker = Unmanaged<ScrollTrackerState>.fromOpaque(ptr).takeUnretainedValue()
-    
-    if (event.getIntegerValueField(.keyboardEventKeycode) == Keys.keyCode(for: "tab") || event.flags.contains(.maskCommand)) {
-        if tracker.isSwitching {
-            tracker.hasSelectedVertical = true
-            tracker.isSwitching = false
+func hotkeyUp(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? {
+    // NOTE: The event only gets emitted if the app is visible to prevent "selecting windows from the grave"
+    // However, hotkeyDown is always updated to prevent a selection by click from keeping hotkeyDown == true and thus, preventing the app from reopening.
+    if (event.getIntegerValueField(.keyboardEventKeycode) == TAB_KEYCODE) {
+        ScrollTrackingSharedState.shared.hotkeyDown = false
+        if ScrollTrackingSharedState.shared.isVisible {
+            NotificationCenter.default.post(name: .didHotkeyUpNotification, object: nil) // Let the app listen and then decide if it cares based on search status
         }
-        
         return nil // Don't pass input through
     }
     
@@ -133,18 +95,11 @@ func fnzUp(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, refcon: Un
 
 // All horizontal scroll values here are negative because a pan left triggers delete and also produces a negative value
 func scrollHandler(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? {
-    guard let argRef = refcon else {
-        return Unmanaged.passUnretained(event)
-    }
-    let ptr = argRef.assumingMemoryBound(to: UnsafeMutableRawPointer.self)
-    let tracker = Unmanaged<ScrollTrackerState>.fromOpaque(ptr).takeUnretainedValue()
-    
-    if tracker.isArrangingWindows || !tracker.isSwitching {
-        return Unmanaged.passUnretained(event)
+    if ScrollTrackingSharedState.shared.isVisible {
+        let vertDelta = event.getIntegerValueField(.scrollWheelEventDeltaAxis1)
+        ScrollTrackingSharedState.shared.scrollDelta += Int(vertDelta)
+        return nil
     }
     
-    let vertDelta = event.getIntegerValueField(.scrollWheelEventDeltaAxis1)
-        
-    tracker.vertScrollDelta = min(max(ScrollConfigConstants.MIN_VERT_DELTA, tracker.vertScrollDelta+Int(vertDelta)), tracker.maxVertDelta)
-    return nil // Don't pass the vertical scroll action to the scrollview
+    return Unmanaged.passUnretained(event)
 }

@@ -8,8 +8,20 @@
 import SwiftUI
 
 struct AppListTest: View {
+    @State private var appList = AllAppList.shared
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack(spacing: 8.0) {
+            ForEach(appList.apps.shuffled()) { app in
+                HStack(spacing: 16.0) {
+                    Image(nsImage: app.icon)
+                    Text(app.name)
+                }
+            }
+        }
+        .onAppear {
+            appList.updateAppList()
+        }
     }
 }
 

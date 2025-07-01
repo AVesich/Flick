@@ -8,8 +8,45 @@
 import SwiftUI
 
 struct VisualSettingsView: View {
+    
+    @AppStorage("animationSpeedModifier") private var animationSpeedModifier: Double = 0.0
+
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack {
+            SettingsBox(title: "Window Size") {
+                VStack(spacing: 8.0) {
+                    HStack() {
+                        Text("Window Width")
+                        Spacer()
+                        Stepper(value: VisualConfigConstants.$windowWidth, in: 300...600, step: 50) {
+                            Text(VisualConfigConstants.windowWidth.formatted())
+                        }
+                    }
+                    HStack() {
+                        Text("Window Height")
+                        Spacer()
+                        Stepper(value: VisualConfigConstants.$windowHeight, in: 300...600, step: 50) {
+                            Text(VisualConfigConstants.windowHeight.formatted())
+                        }
+                    }
+                }
+            }
+
+            SettingsBox(title: "Animations") {
+                HStack(spacing: 24.0) {
+                    Text("Animation Speed")
+                    Slider(value: $animationSpeedModifier, in: -0.1...0.1, step: 0.05) {
+                    } minimumValueLabel: {
+                        Text("Snappier")
+                    } maximumValueLabel: {
+                        Text("Smoother")
+                    }
+                }
+            }
+            
+            Spacer()
+        }
+        .padding()
     }
 }
 

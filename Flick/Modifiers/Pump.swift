@@ -6,23 +6,29 @@
 //
 
 import SwiftUI
+import Foundation
 
-struct ShrinkOnPress: ViewModifier {
+struct Pump: ViewModifier {
     
-    @State public var pressed = false
+    @Binding public var pumping: Bool
+    @State private var pumpScale: CGFloat = 1.0
     
     func body(content: Content) -> some View {
         content
-            .scaleEffect(pressed ? 1.0 - VisualConfigConstants.selectionPumpStrength : 1.0)
-            .animation(.bouncy(duration: VisualConfigConstants.slowAnimationDuration, extraBounce: 0.1), value: pressed)
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { _ in
-                        pressed = true
+            .scaleEffect(pumpScale)
+            .onChange(of: pumping) { _, shouldPump in
+                guard shouldPump else { return }
+                
+                withAnimation(.easeOut(duration: 0.025)) {
+                    pumpScale -= 0.15
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.025) {
+                    withAnimation(.bouncy(duration: VisualConfigConstants.slowAnimationDuration+0.05, extraBounce: 0.1)) {
+                        pumpScale = 1.0
                     }
-                    .onEnded { _ in
-                        pressed = false
-                    }
-            )
+                }
+                
+                pumping = false
+            }
     }
 }

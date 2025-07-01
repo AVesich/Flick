@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D9C2EE3E2E0A5698007B71A9 /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = D9C2EE3D2E0A5698007B71A9 /* LaunchAtLogin */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		D9CD15172CB5B67000EC1267 /* Flick.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flick.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -36,6 +40,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D9C2EE3E2E0A5698007B71A9 /* LaunchAtLogin in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +83,7 @@
 			);
 			name = Flick;
 			packageProductDependencies = (
+				D9C2EE3D2E0A5698007B71A9 /* LaunchAtLogin */,
 			);
 			productName = Mini;
 			productReference = D9CD15172CB5B67000EC1267 /* Flick.app */;
@@ -107,6 +113,9 @@
 			);
 			mainGroup = D9CD150E2CB5B67000EC1267;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D9C2EE3C2E0A5698007B71A9 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D9CD15182CB5B67000EC1267 /* Products */;
 			projectDirPath = "";
@@ -282,6 +291,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = AVesich.Flick;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -317,6 +327,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = AVesich.Flick;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -348,6 +359,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D9C2EE3C2E0A5698007B71A9 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/LaunchAtLogin-Modern";
+			requirement = {
+				kind = exactVersion;
+				version = 1.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D9C2EE3D2E0A5698007B71A9 /* LaunchAtLogin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D9C2EE3C2E0A5698007B71A9 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */;
+			productName = LaunchAtLogin;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D9CD150F2CB5B67000EC1267 /* Project object */;
 }

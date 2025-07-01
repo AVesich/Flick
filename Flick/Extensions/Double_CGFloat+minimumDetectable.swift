@@ -7,6 +7,10 @@
 
 import Foundation
 
+extension Double {
+    static let minimumDetectable: CGFloat = 0.001
+}
+
 extension CGFloat {
     static let minimumDetectable: CGFloat = 0.001
 }

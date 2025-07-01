@@ -9,21 +9,16 @@ import SwiftUI
 
 struct SettingsView: View {
     
-    private let categories: [SettingsOption] = [
-        SettingsOption(title: "General", iconName: "gearshape"),
-        SettingsOption(title: "Visuals", iconName: "photo")
-    ]
-    
     var body: some View {
         TabView {
-            ForEach(categories) { category in
-                Tab(category.title, systemImage: category.iconName) {
-                    Text(category.title)
-                }
+            Tab("General", systemImage: "gearshape") {
+                GeneralSettingsView()
+            }
+            Tab("Visuals", systemImage: "photo") {
+                VisualSettingsView()
             }
         }
-        .scenePadding()
-        .frame(maxWidth: 512.0, maxHeight: 512.0)
+        .frame(width: 550.0, height: 512.0)
     }
 }
 

@@ -9,7 +9,7 @@ import SwiftUI
 import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
-            
+    
     internal func applicationDidFinishLaunching(_ notification: Notification) {
         prepareWindow()
     }
@@ -20,7 +20,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             makeBorderless(from: window)
         }
     }
-
+    
     private func makeBackgroundClear(from window: NSWindow) {
         // Make background clear
         window.backgroundColor = .clear
@@ -29,48 +29,114 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func makeBorderless(from window: NSWindow) {
         // Make background clear
         window.styleMask = [.borderless]
-        window.hidesOnDeactivate = true
+        window.hasShadow = false
+        window.styleMask.insert(.fullSizeContentView)
     }
 }
 
 @main
 struct FlickApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    private var scrollService = ScrollService() // Observed
+    @Environment(\.scenePhase) private var appState
+    private var scrollService = ScrollService()
     
-    @State private var pumpEffectScale: CGFloat = 0.001
+    @FocusState private var permAppFocus: Bool
+    @State private var pumpEffectScale: CGFloat = .minimumDetectable
+    @State private var pulse: Bool = false
+    @State private var pulseColor: Color = .red
+    @StateObject private var search: Search = Search(appList: AllAppList.shared, windowList: ActiveWindowList.shared)
+    @State private var selectedIndex: Int = ScrollConfigConstants.NUM_PRE_WINDOW_SCROLL_OPTIONS
+    private var isVisible: Bool {
+        pumpEffectScale == 1.0
+    }
     
     var body: some Scene {
         WindowGroup {
-            ZStack {
-                WindowSwitchView(scrollState: scrollService.scrollState)
-                    .ignoresSafeArea()
-                    .background(.black)
-                    .clipShape(RoundedRectangle(cornerRadius: 16.0))
-                    .scaleEffect(pumpEffectScale, anchor: .center)
-                    .animation(.bouncy(duration: 0.15), value: pumpEffectScale)
-                    .onChange(of: scrollService.scrollState.isSwitching) { (_, switching) in
-                        if switching {
-                            Task {
-                                await scrollService.scrollState.updateAppList()
-                            }
-                            pumpEffectScale = 1.0
-                        } else {
-                            pumpEffectScale = 0.001
-                        }
+            MainView(selectedIndex: selectedIndex)
+                .environmentObject(search)
+                .background(.black)
+                .clipShape(.rect(cornerRadius: VisualConfigConstants.largeCornerRadius))
+                .shadow(color: .white.opacity(0.25), radius: 6.0)
+                .scaleEffect(pumpEffectScale, anchor: .center)
+                .onAppear {
+                    pumpEffectScale = .minimumDetectable
+                }
+                .focusable()
+                .focusEffectDisabled()
+                .focused($permAppFocus)
+                .onShowApp {
+                    permAppFocus = true
+                    resetValues()
+                    pumpEffectScale = 1.0
+                    ScrollTrackingSharedState.shared.isVisible = true
+                }
+                .onHideApp {
+                    pumpEffectScale = .minimumDetectable
+                    ScrollTrackingSharedState.shared.isVisible = false
+                }
+                .onChange(of: permAppFocus) {
+                    if permAppFocus {
+                        print("Perm focus on")
+                    } else {
+                        print("Perm focus off")
                     }
-            }
+                }
+                .onExitCommand {
+                    NSApp.fakeHide()
+                }
+                .onHotkeyUp {
+                    if selectedIndex != 0 {
+                        NSApp.fakeHide()
+                    }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .didScrollUpNotification)) { _ in
+                    if isVisible && selectedIndex > 0 {
+                        selectedIndex -= 1
+                    }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .didScrollDownNotification)) { _ in
+                    if isVisible && selectedIndex-ScrollConfigConstants.NUM_PRE_WINDOW_SCROLL_OPTIONS < search.results.count-1 {
+                        selectedIndex += 1
+                    }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .deletePressedNotification)) { _ in
+                    if isVisible {
+                        pulse = true
+//                        Task {
+//                            await search.refresh()
+//                        }
+                    }
+                }
+                .animation(.bouncy(duration: VisualConfigConstants.fastAnimationDuration), value: pumpEffectScale)
+                .backgroundPulse(enabled: pulse, color: pulseColor)
+                .modifier(Pump(pumping: $pulse))
+                .padding(48.0)
         }
         .defaultPosition(.center)
         .windowResizability(.contentMinSize)
+                
         MenuBarExtra("Flick", systemImage: "macwindow.on.rectangle") {
             Button("Close Flick") {
                 NSApp.terminate(self)
             }
             Divider()
-            Button("Flick Settings...") {
-                NSApp.terminate(self)
+            SettingsLink() {
+                Text("Flick Settings...")
             }
         }
+        
+        Settings {
+            SettingsView()
+                .environmentObject(search)
+                .modelContainer(FlickDataModel.shared.modelContainer)
+        }
+    }
+    
+    private func resetValues() {
+        Task {
+            await search.refresh()
+        }
+        search.query = ""
+        selectedIndex = ScrollConfigConstants.NUM_PRE_WINDOW_SCROLL_OPTIONS
     }
 }

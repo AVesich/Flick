@@ -5,14 +5,20 @@
 //  Created by Austin Vesich on 6/22/25.
 //
 
+import AppKit
 import SwiftUI
 
 struct IconImage: View {
+    public let icon: NSImage
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        Image(nsImage: icon)
+            .resizable()
+            .frame(width: 30.0, height: 30.0)
+            .scaledToFit()
     }
 }
 
 #Preview {
-    IconImage()
+    IconImage(icon: NSImage(systemSymbolName: "app.fill", accessibilityDescription: nil)!)
 }

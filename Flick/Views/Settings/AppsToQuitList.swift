@@ -1,49 +1,67 @@
-import SwiftUI
 
-struct AppListView: View {
-    @State private var apps: [String] = ["App 1", "App 2"]
-    @State private var selectedApp: String?
+import SwiftUI
+import SwiftData
+
+struct AppsToQuitList: View {
+    
+    @EnvironmentObject private var search: Search
+    @Query private var apps: [AppData] = []
+    @State private var selectedApp: AppData?
+    @State private var searchingForApp: Bool = false
     
     var body: some View {
         VStack(alignment: .leading) {
-            List(selection: $selectedApp) {
-                ForEach(apps, id: \.self) { app in
-                    Text(app)
+            List(apps, id: \.self, selection: $selectedApp) { app in
+                HStack(spacing: 16.0) {
+                    IconImage(icon: app.icon)
+                    Text(app.name)
+                    Spacer()
                 }
+                .withDetectableBackground()
             }
-            .listStyle(.inset)
-
+            .scrollContentBackground(.hidden)
+            .frame(height: 256.0)
+            
             Divider()
             
             HStack(spacing: 8) {
                 Button(action: {
-                    // Add app logic here
-                    apps.append("New App")
+                    searchingForApp.toggle()
                 }) {
                     Image(systemName: "plus")
+                        .frame(width: 24.0, height: 24.0)
                 }
-                .buttonStyle(BorderlessButtonStyle())
+                .buttonStyle(.borderless)
                 
                 Divider()
                 
-                Button(action: {
-                    // Remove selected app logic here
-                    if let selectedApp = selectedApp,
-                        let index = apps.firstIndex(of: selectedApp) {
-                        apps.remove(at: index)
-                    }
-                }) {
+                Button {
+                    BlockedAppList.shared.unblockApp(selectedApp!)
+                } label: {
                     Image(systemName: "minus")
+                        .frame(width: 24.0, height: 24.0)
                 }
-                .buttonStyle(BorderlessButtonStyle())
+                .buttonStyle(.borderless)
                 .disabled(selectedApp == nil)
             }
-            .frame(height: 16.0)
+            .frame(height: 24.0)
+            .padding([.leading, .bottom], 8.0)
         }
-        .padding()
+        .clipShape(.rect(cornerRadius: VisualConfigConstants.smallCornerRadius))
+        .overlay {
+            RoundedRectangle(cornerRadius: VisualConfigConstants.smallCornerRadius)
+                .stroke(.separator)
+        }
+        .fileImporter(isPresented: $searchingForApp,
+                      allowedContentTypes: [.application]) { result in
+            // If the operation fails, nothing needs to happen, so try? here
+            guard let url = try? result.get() else { return }
+            BlockedAppList.shared.blockApp(AppData(url: url))
+        }
     }
 }
 
 #Preview {
-    AppListView()
+    AppsToQuitList()
+        .environmentObject(Search(appList: AllAppList.shared, windowList: ActiveWindowList.shared))
 }

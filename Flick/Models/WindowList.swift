@@ -8,54 +8,66 @@
 import AppKit
 import CoreGraphics
 import ScreenCaptureKit
-import Observation
 
-@Observable class WindowList {
-    public var appIconsWithWindowDescriptionsAndPIDs = [Window]()
-    public static var appIcons: [String: NSImage?] = [String: NSImage?]()
+class ActiveWindowList: Searchable {
+    
+    // MARK: - Properties
+    public static let shared = ActiveWindowList()
+    public var appWindowCounts: [String : Int] = [:]
+    public var windows: [Window] = []
     
     init() {
-        Task {
-            await updateAppList()
-        }
-    }		
-    
-    // MARK: - Updating Window List
-    public func updateAppList() async {
-        appIconsWithWindowDescriptionsAndPIDs = await getWindowData()
-    }
-    
-    public static func updateAppIcons() {
-        appIcons = [String: NSImage?]()
-        
-        // Iterating instead of using map{ } avoids errors when running into duplicates
-        for app in NSWorkspace.shared.runningApplications where app.localizedName != nil {
-            appIcons[app.localizedName!] = app.icon
+        Task { [weak self] in
+            await self?.updateWindowList()
         }
     }
+    
+    // MARK: - Public Window List Operations
+    public func updateWindowList() async {
+        windows = await getWindowData()
+    }
         
+    public func search(withQuery queryString: String) -> [Window] {
+        return windows.filter { window in
+            return window.matches(query: queryString)
+        }
+    }
+            
     // MARK: - Private Window List Helpers
     private func getWindowData() async -> [Window] {
         let windows = await getWindowsInZOrder()
+        var appURLs = [pid_t : NSURL]()
+        appWindowCounts.removeAll()
         
-        WindowList.updateAppIcons()
-                                
-        var pidCounts = [pid_t : Int]()
+        for app in NSWorkspace.shared.runningApplications where app.activationPolicy == .regular {
+            let nsURL = NSURL(string: app.bundleURL!.path)!
+            if !AppIconCache.shared.contains(nsURL) {
+                AppIconCache.shared.insert(nsURL, app.icon)
+            }
+            
+            appURLs[app.processIdentifier] = nsURL
+        }
         
         return windows.map {
             let pid = $0.owningApplication!.processID
-            pidCounts[pid] = pidCounts[pid] == nil ? 0 : pidCounts[pid]! + 1
-            return Window(appIcon: .appIcon(withName: $0.owningApplication!.applicationName),
+            let bundleIdentifier = $0.owningApplication!.bundleIdentifier
+            let appName = $0.owningApplication!.applicationName // Guaranteed to exist via app fillter
+
+            appWindowCounts[bundleIdentifier] = (appWindowCounts[bundleIdentifier] ?? -1) + 1 // -1 ensures base-0 index
+
+            return Window(appIcon: AppIconCache.shared.icon(for: appURLs[pid]!),
+                          appName: appName,
                           windowTitle: $0.title ?? "Untitled",
-                          windowNumber: pidCounts[pid]!,
-                          appPID: pid		   )
+                          windowIndex: appWindowCounts[bundleIdentifier]!,
+                          appPID: pid,
+                          appBundleID: bundleIdentifier)
         }
     }
-    
+        
     private func getWindowsInZOrder() async -> [SCWindow] {
-        var windows = await getWindows()
+        let windows = await getWindows()
         guard let windowInfo = CGWindowListCopyWindowInfo([.excludeDesktopElements, .optionOnScreenOnly], kCGNullWindowID) as? [[String: Any]] else {
-            return [SCWindow]()
+            return windows
         }
         
         return windowInfo.compactMap { info in
@@ -67,13 +79,9 @@ import Observation
             }
         }
     }
-    
+        
     private func getWindows() async -> [SCWindow] {
-        do {
-            let windows = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false).windows
-            return windows.filter { $0.isOpenApp && !$0.isSelf }
-        } catch {
-            return [SCWindow]()
-        }
+        let windows = (try? await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false).windows) ?? [SCWindow]()
+        return windows.filter { $0.isOpenApp && !$0.isSelf }
     }
 }

@@ -9,44 +9,35 @@ import SwiftUI
 
 struct SearchTextField: View {
     
-    @FocusState var isFocused: Bool
     @Binding var text: String
-    public var hovering: Bool
-    public let placeholder: String
+    public var selecting: Bool
+    private var placeholder: String {
+        return selecting ? "Search or Open app..." : "Search"
+    }
+    private let maxWidth = VisualConfigConstants.cellWidth - 2*VisualConfigConstants.windowPadding
     
     var body: some View {
-        HStack {
-            TextField(text: $text, prompt: Text(placeholder)) {}
-                .focused($isFocused)
-                .frame(width: hovering ? VisualConfigConstants.cellContentWidth : 96.0, height: 20.0)
-                .padding(.vertical, VisualConfigConstants.cellPadding)
-                .padding(.horizontal, hovering ? VisualConfigConstants.cellPadding : VisualConfigConstants.windowPadding)
-                .textFieldStyle(.plain)
-                .overlay {
-                    HStack {
-                        Spacer()
-                        Image(systemName: "magnifyingglass")
-                            .opacity(0.3)
-                    }
-                    .padding(VisualConfigConstants.cellPadding)
+        TextField(text: $text, prompt: Text(placeholder)) {}
+            .modifier(SelectionBasedFocus(isSelected: selecting))
+            .frame(width: selecting ? maxWidth : 96.0, height: selecting ? 30.0 : VisualConfigConstants.searchBarHeight)
+            .padding(.vertical, VisualConfigConstants.cellPadding)
+            .padding(.horizontal, VisualConfigConstants.windowPadding)
+            .textFieldStyle(.plain)
+            .overlay {
+                HStack {
+                    Spacer()
+                    Image(systemName: "magnifyingglass")
+                        .opacity(0.3)
                 }
-                .background {
-                    RoundedRectangle(cornerRadius: hovering ? 10.0 : 16.0)
-                        .fill(.secondary.opacity(VisualConfigConstants.selectionOpacity))
-                }
-                .onChange(of: hovering) { _, hovering in
-                    if hovering {
-                        isFocused = true
-                    } else {
-                        isFocused = false
-                    }
-                }
-                
-        }
-        .animation(.bouncy(duration: 0.15), value: hovering)
+                .padding(.horizontal, VisualConfigConstants.windowPadding)
+            }
+            .background {
+                RoundedRectangle(cornerRadius: selecting ? VisualConfigConstants.smallCornerRadius : 17.0)
+                    .fill(.secondary.opacity(VisualConfigConstants.selectionOpacity))
+            }
     }
 }
 
 #Preview {
-    SearchTextField(text: .constant(""), hovering: false, placeholder: "Open an app...")
+    SearchTextField(text: .constant(""), selecting: false)
 }

@@ -8,8 +8,11 @@
 import AppKit
 
 struct AllAppList: Searchable {
-    public var apps: [AppData] = [AppData]()
-    private var cachedIcons: [URL: NSImage] = [URL: NSImage]()
+    
+    // MARK: - Properties
+    public static let shared = AllAppList()
+    
+    public var apps: Set<AppData> = []
     
     // MARK: - Public methods
     public func search(withQuery queryString: String) -> [AppData] {
@@ -19,23 +22,13 @@ struct AllAppList: Searchable {
     }
     
     public mutating func updateAppList() {
-        let urls = getAppURLs()
-        
-        apps = urls.map { url in
-            let icon = getAppIcon(withURL: url)
-            return AppData(url: url, icon: icon)
+        for url in getAppURLs() {
+            guard !apps.contains(where: { app in app.url == url }) else { continue }
+            apps.insert(AppData(url: url))
         }
     }
     
-    // MARK: - Private app finding utils
-    private mutating func getAppIcon(withURL url: URL) -> NSImage {
-        if cachedIcons.keys.firstIndex(of: url) == nil {
-            cachedIcons[url] = NSWorkspace.shared.icon(forFile: url.path)
-        }
-
-        return cachedIcons[url] ?? .unknownIcon
-    }
-    
+    // MARK: - Private app finding utils    
     private func getAppURLs() -> [URL] {
         let applicationsURL = URL.applicationDirectory
         let appURLs = try? FileManager.default.contentsOfDirectory(at: applicationsURL,

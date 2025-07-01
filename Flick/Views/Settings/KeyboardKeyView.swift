@@ -8,11 +8,23 @@
 import SwiftUI
 
 struct KeyboardKeyView: View {
+    
+    public let keyText: String
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        Text(keyText)
+            .font(.system(size: 18.0, weight: .semibold))
+            .padding(.horizontal, 16.0)
+            .padding(.vertical, 16.0)
+            .background(.black)
+            .clipShape(.rect(cornerRadius: 16.0))
     }
 }
 
 #Preview {
-    KeyboardKeyView()
+    VStack {
+        KeyboardKeyView(keyText: "⌘")
+        KeyboardKeyView(keyText: "tab")
+    }
+    .frame(width: 100.0)
 }

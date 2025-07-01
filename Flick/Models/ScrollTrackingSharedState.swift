@@ -8,19 +8,15 @@
 import SwiftUI
 import Observation
 
-class ScrollTrackingSharedState {
+struct ScrollTrackingSharedState {
     
     // MARK: - Singleton instance
     // Singleton used because this acts as a bridge between the main app and ScrollService, and there's no need to track these values across multiple instances
-    public static let shared = ScrollTrackingSharedState()
+    public static var shared = ScrollTrackingSharedState()
     
-    // MARK: - Status
-    public var isSearching: Bool {
-        return true
-//        return scrollIdx == ScrollConfigConstants.SEARCH_OPTION_INDEX
-    }
-    
+    // MARK: - Status    
     public var hotkeyDown: Bool = false
+    public var isVisible: Bool = false
     
     // MARK: - Vertical Scrolling
     public var scrollDelta: Int = 0 {
