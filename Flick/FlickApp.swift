@@ -43,8 +43,8 @@ struct FlickApp: App {
     
     @FocusState private var permAppFocus: Bool
     @State private var pumpEffectScale: CGFloat = .minimumDetectable
-    @State private var pulse: Bool = false
-    @State private var pulseColor: Color = .red
+//    @State private var pulse: Bool = false
+//    @State private var pulseColor: Color = .red
     @StateObject private var search: Search = Search(appList: AllAppList.shared, windowList: ActiveWindowList.shared)
     @State private var selectedIndex: Int = ScrollConfigConstants.NUM_PRE_WINDOW_SCROLL_OPTIONS
     private var isVisible: Bool {
@@ -63,7 +63,7 @@ struct FlickApp: App {
                     pumpEffectScale = .minimumDetectable
                 }
 //                .modifier(BackgroundPulse(enabled: pulse, color: pulseColor))
-                .modifier(Pump(pumping: $pulse))
+//                .modifier(Pump(pumping: $pulse))
                 .animation(.bouncy(duration: VisualConfigConstants.fastAnimationDuration), value: pumpEffectScale)
                 .focusable()
                 .focusEffectDisabled()
@@ -105,10 +105,10 @@ struct FlickApp: App {
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .deletePressedNotification)) { _ in
                     if isVisible {
-                        pulse = true
-//                        Task {
-//                            await search.refreshWindowList()
-//                        }
+//                        pulse = true
+                        Task {
+                            await search.refreshWindowList()
+                        }
                     }
                 }
                 .padding(48.0)
