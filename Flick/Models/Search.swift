@@ -7,6 +7,7 @@
 
 import Foundation
 
+@MainActor
 class Search: ObservableObject {
     // MARK: - Private Properties
     public var allAppList: AllAppList!
@@ -17,7 +18,14 @@ class Search: ObservableObject {
     @Published public var query: String = "" {
         didSet {
             guard oldValue != query else { return }
-            updateResults()
+//            if oldValue.isEmpty { // We are now searching for something, so update the internal app list
+//                Task { [weak self] in
+//                    await self?.allAppList.updateAppList()
+//                }
+//            }
+            Task { [weak self] in
+                await self?.updateResults()
+            }
         }
     }
     @Published public var results: [any SearchableItem & Identifiable] = []
@@ -34,38 +42,31 @@ class Search: ObservableObject {
     }
     
     // MARK: - Searching
-    private func searchAllLists(withQuery queryString: String) -> [any SearchableItem & Identifiable] {
+    private func searchAllLists(withQuery queryString: String) async -> [any SearchableItem & Identifiable] {
         let openedBundleIDs = Set<String>(activeWindowList.appWindowCounts.keys)
-        let openableApps = allAppList.search(withQuery: queryString).filter { app in
+        let openableApps = await allAppList.search(withQuery: queryString).filter { app in
             !openedBundleIDs.contains(app.bundleID) && app.bundleID != Bundle.main.bundleIdentifier!
         }
         
-        return activeWindowList.search(withQuery: queryString) + openableApps
+        return await activeWindowList.search(withQuery: queryString) + openableApps
     }
     
-    public func refresh() async {
+    public func refreshWindowList() async {
         guard !isRefreshing else { return }
         isRefreshing = true
         
         await activeWindowList.updateWindowList()
-        allAppList.updateAppList()
-        updateResults()
+        await updateResults()
         
         isRefreshing = false
     }
     
-    private func updateResults() {
-        DispatchQueue.main.async { [weak self] in
-            guard self != nil else { return }
-            
-            guard !self!.query.isEmpty else {
-                print("regular")
-                self!.results = self!.activeWindowList.windows
-                return
-            }
-            
-            print("search")
-            self!.results = self!.searchAllLists(withQuery: self!.query)
+    private func updateResults() async {
+        guard !query.isEmpty else {
+            results = activeWindowList.windows
+            return
         }
+        
+        results = await searchAllLists(withQuery: query)
     }
 }

@@ -16,8 +16,8 @@ struct Pump: ViewModifier {
     func body(content: Content) -> some View {
         content
             .scaleEffect(pumpScale)
-            .onChange(of: pumping) { _, shouldPump in
-                guard shouldPump else { return }
+            .onChange(of: pumping) {
+                guard pumping else { return }
                 
                 withAnimation(.easeOut(duration: 0.025)) {
                     pumpScale -= 0.15
@@ -29,6 +29,6 @@ struct Pump: ViewModifier {
                 }
                 
                 pumping = false
-            }
+        }
     }
 }

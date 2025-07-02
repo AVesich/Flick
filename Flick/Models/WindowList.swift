@@ -27,7 +27,7 @@ class ActiveWindowList: Searchable {
         windows = await getWindowData()
     }
         
-    public func search(withQuery queryString: String) -> [Window] {
+    public func search(withQuery queryString: String) async -> [Window] {
         return windows.filter { window in
             return window.matches(query: queryString)
         }

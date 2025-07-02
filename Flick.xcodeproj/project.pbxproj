@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 90;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -38,11 +38,9 @@
 /* Begin PBXFrameworksBuildPhase section */
 		D9CD15142CB5B67000EC1267 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				D9C2EE3E2E0A5698007B71A9 /* LaunchAtLogin in Frameworks */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
@@ -75,8 +73,6 @@
 				D9CD15152CB5B67000EC1267 /* Resources */,
 			);
 			buildRules = (
-			);
-			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
 				D9CD15192CB5B67000EC1267 /* Flick */,
@@ -116,7 +112,7 @@
 			packageReferences = (
 				D9C2EE3C2E0A5698007B71A9 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */,
 			);
-			preferredProjectObjectVersion = 77;
+			preferredProjectObjectVersion = 90;
 			productRefGroup = D9CD15182CB5B67000EC1267 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -129,25 +125,21 @@
 /* Begin PBXResourcesBuildPhase section */
 		D9CD15152CB5B67000EC1267 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		D9CD15132CB5B67000EC1267 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		D9CD15242CB5B67100EC1267 /* Debug */ = {
+		D9CD15242CB5B67100EC1267 /* Debug configuration for PBXProject "Flick" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -200,17 +192,18 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = "";
 			};
 			name = Debug;
 		};
-		D9CD15252CB5B67100EC1267 /* Release */ = {
+		D9CD15252CB5B67100EC1267 /* Release configuration for PBXProject "Flick" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -257,15 +250,16 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = "";
 			};
 			name = Release;
 		};
-		D9CD15272CB5B67100EC1267 /* Debug */ = {
+		D9CD15272CB5B67100EC1267 /* Debug configuration for PBXNativeTarget "Flick" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -301,7 +295,7 @@
 			};
 			name = Debug;
 		};
-		D9CD15282CB5B67100EC1267 /* Release */ = {
+		D9CD15282CB5B67100EC1267 /* Release configuration for PBXNativeTarget "Flick" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -343,19 +337,17 @@
 		D9CD15122CB5B67000EC1267 /* Build configuration list for PBXProject "Flick" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				D9CD15242CB5B67100EC1267 /* Debug */,
-				D9CD15252CB5B67100EC1267 /* Release */,
+				D9CD15242CB5B67100EC1267 /* Debug configuration for PBXProject "Flick" */,
+				D9CD15252CB5B67100EC1267 /* Release configuration for PBXProject "Flick" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		D9CD15262CB5B67100EC1267 /* Build configuration list for PBXNativeTarget "Flick" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				D9CD15272CB5B67100EC1267 /* Debug */,
-				D9CD15282CB5B67100EC1267 /* Release */,
+				D9CD15272CB5B67100EC1267 /* Debug configuration for PBXNativeTarget "Flick" */,
+				D9CD15282CB5B67100EC1267 /* Release configuration for PBXNativeTarget "Flick" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */

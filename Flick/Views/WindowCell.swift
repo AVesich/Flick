@@ -12,6 +12,7 @@ struct WindowCell: View {
     
     @AppStorage("selectWithMouse") private var selectWithMouse: Bool = true
     @State private var hovering: Bool = false
+    @State private var isPressed: Bool = false
     public var selecting: Bool
     public var window: Window
     
@@ -25,13 +26,22 @@ struct WindowCell: View {
             }
             .frame(width: VisualConfigConstants.cellContentWidth, height: VisualConfigConstants.cellContentHeight)
             .padding(VisualConfigConstants.cellPadding)
+            .background {
+                Rectangle()
+                    .fill(.secondary.opacity(VisualConfigConstants.selectionOpacity))
+                    .frame(width: VisualConfigConstants.cellWidth, height: VisualConfigConstants.cellHeight)
+                    .opacity(selecting ? 1.0 : .minimumDetectable)
+                    .animation(.easeInOut(duration: VisualConfigConstants.fastAnimationDuration), value: selecting)
+            }
+            .clipShape(.rect(cornerRadius: VisualConfigConstants.smallCornerRadius))
+            .modifier(ShrinkOnPress(mouseReactivityEnabled: selectWithMouse, isPressed: $isPressed))
             
             if selectWithMouse {
                 ZStack(alignment: .trailing) {
                     Rectangle()
                         .fill(LinearGradient(colors: [.clear, .black.opacity(0.8), .black], startPoint: .leading, endPoint: .trailing))
-                        .scaleEffect(x: (selecting || hovering) ? 1.0 : 0.0, anchor: .trailing)
-                    
+                        .scaleEffect(x: ((selecting || hovering) && !isPressed) ? 1.0 : 0.0, anchor: .trailing)
+                        
                     Button {
                         WindowAppearance.closeWindow(window)
                         NotificationCenter.default.post(name: .deletePressedNotification, object: nil)
@@ -44,32 +54,26 @@ struct WindowCell: View {
                     }
                     .buttonStyle(HoverButtonStyle())
                     .padding(.trailing, VisualConfigConstants.cellPadding)
-                    .opacity((selecting || hovering) ? 1.0 : 0.0)
-                    .animation(.easeInOut(duration: VisualConfigConstants.fastAnimationDuration), value: (selecting || hovering))
+                    .opacity(((selecting || hovering) && !isPressed) ? 1.0 : 0.0)
                 }
                 .frame(width: 2*VisualConfigConstants.cellHeight, height: VisualConfigConstants.cellHeight)
-            }
-        }
-        .background {
-            Rectangle()
-                .fill(.secondary.opacity(VisualConfigConstants.selectionOpacity))
-                .frame(width: VisualConfigConstants.cellWidth, height: VisualConfigConstants.cellHeight)
-                .opacity(selecting ? 1.0 : .minimumDetectable)
                 .animation(.easeInOut(duration: VisualConfigConstants.fastAnimationDuration), value: selecting)
+                .animation(.easeInOut(duration: VisualConfigConstants.fastAnimationDuration), value: hovering)
+                .animation(.easeInOut(duration: VisualConfigConstants.fastAnimationDuration), value: isPressed)
+            }
         }
         .clipShape(.rect(cornerRadius: VisualConfigConstants.smallCornerRadius))
         .scaleEffect((selecting || hovering) ? 1.05 : 1.0)
-        .animation(.bouncy(duration: VisualConfigConstants.slowAnimationDuration, extraBounce: 0.25), value: (selecting || hovering))
         .onHover { hover in
             guard selectWithMouse else { return }
             hovering = hover
         }
+        .animation(.bouncy(duration: VisualConfigConstants.slowAnimationDuration, extraBounce: 0.25), value: (selecting || hovering))
         .onTapGesture {
             guard selectWithMouse else { return }
             WindowAppearance.openWindow(window)
             NSApp.fakeHide()
         }
-        .modifier(ShrinkOnPress(mouseReactivityEnabled: selectWithMouse))
         .modifier(SelectionBasedFocus(isSelected: selecting))
         .onKeyPress(.return) {
             WindowAppearance.openWindow(window)

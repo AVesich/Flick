@@ -31,6 +31,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.styleMask = [.borderless]
         window.hasShadow = false
         window.styleMask.insert(.fullSizeContentView)
+//        window.hidesOnDeactivate = true
     }
 }
 
@@ -61,6 +62,9 @@ struct FlickApp: App {
                 .onAppear {
                     pumpEffectScale = .minimumDetectable
                 }
+//                .modifier(BackgroundPulse(enabled: pulse, color: pulseColor))
+                .modifier(Pump(pumping: $pulse))
+                .animation(.bouncy(duration: VisualConfigConstants.fastAnimationDuration), value: pumpEffectScale)
                 .focusable()
                 .focusEffectDisabled()
                 .focused($permAppFocus)
@@ -103,13 +107,10 @@ struct FlickApp: App {
                     if isVisible {
                         pulse = true
 //                        Task {
-//                            await search.refresh()
+//                            await search.refreshWindowList()
 //                        }
                     }
                 }
-                .animation(.bouncy(duration: VisualConfigConstants.fastAnimationDuration), value: pumpEffectScale)
-                .backgroundPulse(enabled: pulse, color: pulseColor)
-                .modifier(Pump(pumping: $pulse))
                 .padding(48.0)
         }
         .defaultPosition(.center)
@@ -134,7 +135,7 @@ struct FlickApp: App {
     
     private func resetValues() {
         Task {
-            await search.refresh()
+            await search.refreshWindowList()
         }
         search.query = ""
         selectedIndex = ScrollConfigConstants.NUM_PRE_WINDOW_SCROLL_OPTIONS

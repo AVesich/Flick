@@ -11,7 +11,7 @@ import SwiftData
 
 // MARK: - AppData
 @Model
-class AppData: Identifiable {
+final class AppData: Identifiable {
     var id: String {
         bundleID
     }

@@ -7,5 +7,5 @@
 
 protocol Searchable {
     associatedtype T: SearchableItem, Identifiable
-    func search(withQuery queryString: String) -> [T]
+    func search(withQuery queryString: String) async -> [T]
 }

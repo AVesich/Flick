@@ -9,6 +9,8 @@ import SwiftUI
 
 struct VisualSettingsView: View {
     
+    @AppStorage("windowWidth") private var windowWidth: Double = 300.0
+    @AppStorage("windowHeight") private var windowHeight: Double = 300.0
     @AppStorage("animationSpeedModifier") private var animationSpeedModifier: Double = 0.0
 
     var body: some View {
@@ -18,15 +20,15 @@ struct VisualSettingsView: View {
                     HStack() {
                         Text("Window Width")
                         Spacer()
-                        Stepper(value: VisualConfigConstants.$windowWidth, in: 300...600, step: 50) {
-                            Text(VisualConfigConstants.windowWidth.formatted())
+                        Stepper(value: $windowWidth, in: 300...600, step: 50) {
+                            Text(windowWidth.formatted())
                         }
                     }
                     HStack() {
                         Text("Window Height")
                         Spacer()
-                        Stepper(value: VisualConfigConstants.$windowHeight, in: 300...600, step: 50) {
-                            Text(VisualConfigConstants.windowHeight.formatted())
+                        Stepper(value: $windowHeight, in: 300...600, step: 50) {
+                            Text(windowHeight.formatted())
                         }
                     }
                 }

@@ -9,9 +9,15 @@ import Foundation
 import SwiftUI
 
 struct VisualConfigConstants {
-    @AppStorage("windowWidth") static public var windowWidth: Double = 300.0
-    @AppStorage("windowHeight") static public var windowHeight: Double = 300.0
-    @AppStorage("animationSpeedModifier") static private var animationSpeedModifier: Double = 0.0
+    static public var windowWidth: Double {
+        UserDefaults.standard.double(forKey: "windowWidth") ?? 300.0
+    }
+    static public var windowHeight: Double {
+        UserDefaults.standard.double(forKey: "windowHeight") ?? 300.0
+    }
+    static private var animationSpeedModifier: Double {
+        UserDefaults.standard.double(forKey: "animationSpeedModifier") ?? 0.0
+    }
 
     static let windowPadding: CGFloat = 10.0
     

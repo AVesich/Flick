@@ -7,7 +7,7 @@
 
 import SwiftData
 
-struct FlickDataModel {
+class FlickDataModel {
     
     // MARK: - Singleton
     public static let shared = FlickDataModel()

@@ -13,6 +13,7 @@ struct AppCell: View {
     @AppStorage("selectWithMouse") private var selectWithMouse: Bool = true
     @FocusState private var isFocused: Bool
     @State private var hovering: Bool = false
+    @State private var isPressed: Bool = false
     public var selecting: Bool
     public var app: AppData
     
@@ -50,7 +51,7 @@ struct AppCell: View {
             WindowAppearance.openApp(app)
             NSApp.fakeHide()
         }
-        .modifier(ShrinkOnPress(mouseReactivityEnabled: selectWithMouse))
+        .modifier(ShrinkOnPress(mouseReactivityEnabled: selectWithMouse, isPressed: $isPressed))
         .modifier(SelectionBasedFocus(isSelected: selecting))
         .onKeyPress(.return) {
             WindowAppearance.openApp(app)

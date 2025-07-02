@@ -10,7 +10,8 @@ import AppKit
 struct AppIconCache {
     
     // MARK: - Singleton
-    public static var shared: AppIconCache = AppIconCache()
+    public static let shared: AppIconCache = AppIconCache()
+    private let serializedDispatchQueue: DispatchQueue = .init(label: "com.flick.appicons.cache.serialdispatch")
     
     // MARK: - Properties
     private let cache: NSCache<NSURL, NSImage>
@@ -18,19 +19,25 @@ struct AppIconCache {
     // MARK: - Initializatino
     init() {
         cache = NSCache<NSURL, NSImage>()
-        cache.name = "flick.appicons.cache"
+        cache.name = "com.flick.appicons.cache"
     }
     
     // MARK: - Methods
-    public mutating func insert(_ url: NSURL, _ image: NSImage?) {
-        cache.setObject(image ?? .unknownIcon, forKey: url)
+    public func insert(_ url: NSURL, _ image: NSImage?) {
+        serializedDispatchQueue.sync {
+            cache.setObject(image ?? .unknownIcon, forKey: url)
+        }
     }
     
     public func icon(for url: NSURL) -> NSImage {
-        cache.object(forKey: url) ?? .unknownIcon
+        serializedDispatchQueue.sync {
+            cache.object(forKey: url) ?? .unknownIcon
+        }
     }
     
     public func contains(_ url: NSURL) -> Bool {
-        cache.object(forKey: url) != nil
+        serializedDispatchQueue.sync {
+            cache.object(forKey: url) != nil
+        }
     }
 }

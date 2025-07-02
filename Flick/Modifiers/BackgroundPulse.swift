@@ -21,13 +21,13 @@ struct BackgroundPulse: ViewModifier {
                         .stroke(shadowColor, lineWidth: shadowRadius)
                         .blur(radius: shadowRadius)
                         .onChange(of: enabled) {
-                            if enabled {
-                                shadowRadius = 0.0
-                                shadowColor = .red
-                                withAnimation(.easeOut(duration: 0.45)) {
-                                    shadowRadius = 64.0
-                                    shadowColor = .red.opacity(0.0)
-                                }
+                            guard enabled else { return }
+                            shadowRadius = 0.0
+                            shadowColor = .red
+                            
+                            withAnimation(.easeOut(duration: VisualConfigConstants.slowAnimationDuration*2)) {
+                                shadowRadius = 64.0
+                                shadowColor = .red.opacity(0.0)
                             }
                         }
                 }

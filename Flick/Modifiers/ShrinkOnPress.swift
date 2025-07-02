@@ -10,19 +10,19 @@ import SwiftUI
 struct ShrinkOnPress: ViewModifier {
     
     public let mouseReactivityEnabled: Bool
-    @State public var pressed = false
+    @Binding public var isPressed: Bool
     
     func body(content: Content) -> some View {
         content
-            .scaleEffect(pressed && mouseReactivityEnabled ? 1.0 - VisualConfigConstants.selectionPumpStrength : 1.0)
-            .animation(.bouncy(duration: VisualConfigConstants.slowAnimationDuration, extraBounce: 0.1), value: pressed)
+            .scaleEffect(isPressed && mouseReactivityEnabled ? 1.0 - VisualConfigConstants.selectionPumpStrength : 1.0)
+            .animation(.bouncy(duration: VisualConfigConstants.slowAnimationDuration, extraBounce: 0.1), value: isPressed)
             .simultaneousGesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { _ in
-                        pressed = true
+                        isPressed = true
                     }
                     .onEnded { _ in
-                        pressed = false
+                        isPressed = false
                     }
             )
     }
