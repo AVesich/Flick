@@ -10,5 +10,5 @@ import SwiftUI
 protocol SearchableItem {
     func matches(query searchQuery: String) -> Bool
     
-    @ViewBuilder func cell(isSelected: Bool) -> any View
+    @ViewBuilder func cell(index: Int, isSelected: Bool) -> any View
 }

@@ -62,7 +62,7 @@ extension AppData: SearchableItem {
         return name.lowercased().contains(queryString.lowercased())
     }
     
-    @ViewBuilder func cell(isSelected: Bool) -> any View {
+    @ViewBuilder func cell(index: Int, isSelected: Bool) -> any View {
         AppCell(selecting: isSelected, app: self)
     }
 }

@@ -10,9 +10,11 @@ import AppKit
 
 struct WindowCell: View {
     
+    @EnvironmentObject private var search: Search
     @AppStorage("selectWithMouse") private var selectWithMouse: Bool = true
     @State private var hovering: Bool = false
     @State private var isPressed: Bool = false
+    public var index: Int
     public var selecting: Bool
     public var window: Window
     
@@ -44,6 +46,9 @@ struct WindowCell: View {
                         
                     Button {
                         WindowAppearance.closeWindow(window)
+                        withAnimation(.easeInOut(duration: VisualConfigConstants.fastAnimationDuration)) {
+                            _ = search.results.remove(at: index)
+                        }
                         NotificationCenter.default.post(name: .deletePressedNotification, object: nil)
                     } label: {
                         Image(systemName: "xmark")
@@ -63,7 +68,7 @@ struct WindowCell: View {
             }
         }
         .clipShape(.rect(cornerRadius: VisualConfigConstants.smallCornerRadius))
-        .scaleEffect((selecting || hovering) ? 1.05 : 1.0)
+        .scaleEffect((selecting || hovering) ? 1.04 : 1.0)
         .onHover { hover in
             guard selectWithMouse else { return }
             hovering = hover
@@ -82,6 +87,7 @@ struct WindowCell: View {
         }
         .onKeyPress(.init(Character(UnicodeScalar(127)))) {
             WindowAppearance.closeWindow(window)
+            // TODO: - Pass in index, remove window from search.results here
             NotificationCenter.default.post(name: .deletePressedNotification, object: nil)
             return .handled
         }

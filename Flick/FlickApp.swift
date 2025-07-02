@@ -106,9 +106,6 @@ struct FlickApp: App {
                 .onReceive(NotificationCenter.default.publisher(for: .deletePressedNotification)) { _ in
                     if isVisible {
 //                        pulse = true
-                        Task {
-                            await search.refreshWindowList()
-                        }
                     }
                 }
                 .padding(48.0)

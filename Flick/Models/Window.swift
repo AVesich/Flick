@@ -41,7 +41,7 @@ extension Window: SearchableItem {
         return windowTitle.lowercased().contains(queryString.lowercased())
     }
     
-    @ViewBuilder func cell(isSelected: Bool) -> any View {
-        WindowCell(selecting: isSelected, window: self)
+    @ViewBuilder func cell(index: Int, isSelected: Bool) -> any View {
+        WindowCell(index: index, selecting: isSelected, window: self)
     }
 }
